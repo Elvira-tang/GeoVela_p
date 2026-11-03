@@ -324,7 +324,7 @@ function BoardModeShell({
               <span className="board-agent-orb__glow" aria-hidden />
               <img
                 src={superAppIconImg}
-                alt="OpenGIS Agent"
+                alt="GeoVela Agent"
                 className="relative z-10 h-[62px] w-[62px] rounded-[20px] object-contain drop-shadow-2xl"
               />
             </button>

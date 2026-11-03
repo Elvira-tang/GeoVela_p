@@ -1,5 +1,5 @@
-appId: com.opengis.desktop
-productName: OpenGIS
+appId: com.geovela.desktop
+productName: GeoVela
 directories:
   buildResources: resources
   output: dist

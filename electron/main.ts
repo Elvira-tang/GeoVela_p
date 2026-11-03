@@ -1,12 +1,18 @@
 import { app, BrowserWindow, shell, ipcMain, nativeImage, nativeTheme } from 'electron'
 import { join } from 'path'
-import { readFileSync, existsSync } from 'fs'
+import { readFileSync, existsSync, mkdirSync } from 'fs'
 import { PythonManager } from './ipc/pythonManager'
 import { ensurePythonEnv } from './ipc/pythonSetup'
 import { registerFileHandlers } from './ipc/fileHandlers'
 import { registerSettingsHandlers, loadProjects } from './ipc/settingsHandlers'
 import { createMenu } from './menu'
 import { initLogger, getLogDir } from './logger'
+
+// Keep GeoVela's settings, projects, logs and Python environment separate from OpenGIS.
+app.setName('GeoVela')
+const geovelaUserData = join(app.getPath('appData'), 'geovela')
+mkdirSync(geovelaUserData, { recursive: true })
+app.setPath('userData', geovelaUserData)
 
 /**
  * Read the saved theme from settings.json synchronously (before any window opens).

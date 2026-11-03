@@ -29,7 +29,7 @@ function pickPythonCommand() {
 
 // ── Venv lives in user data dir (shared between dev and packaged app) ──
 function getVenvDir() {
-  const appName = 'opengis'
+  const appName = 'geovela'
   if (isWin) {
     return join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), appName, 'venv')
   } else if (isMac) {

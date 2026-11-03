@@ -196,7 +196,7 @@ export function parseWorkflow(raw: string, fallbackName = 'Untitled'): Workflow 
     obj.schemaVersion = WORKFLOW_SCHEMA_VERSION
   } else if (version > WORKFLOW_SCHEMA_VERSION) {
     throw new Error(
-      `Workflow was saved by a newer version of OpenGIS (schema v${version}). ` +
+      `Workflow was saved by a newer version of GeoVela (schema v${version}). ` +
       `Please upgrade.`
     )
   }

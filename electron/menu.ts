@@ -103,15 +103,15 @@ export function createMenu(mainWindow: BrowserWindow): void {
       label: 'Help',
       submenu: [
         {
-          label: 'Documentation',
+          label: 'Upstream Documentation',
           click: () => {
-            require('electron').shell.openExternal('https://github.com/opengis/opengis')
+            require('electron').shell.openExternal('https://github.com/ATFfang/OpenGIS')
           },
         },
         {
-          label: 'Report Issue',
+          label: 'Upstream Issues',
           click: () => {
-            require('electron').shell.openExternal('https://github.com/opengis/opengis/issues')
+            require('electron').shell.openExternal('https://github.com/ATFfang/OpenGIS/issues')
           },
         },
       ],

@@ -465,7 +465,7 @@ async function downloadFile(
       }
 
       const req = mod.get(requestUrl, {
-        headers: { 'User-Agent': 'OpenGIS-Setup/1.0' },
+        headers: { 'User-Agent': 'GeoVela-Setup/1.0' },
         timeout: 15_000,  // 15s connection timeout
       }, (res) => {
         // Handle redirects

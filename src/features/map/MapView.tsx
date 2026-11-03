@@ -456,7 +456,7 @@ export function MapView({
       {showControls && (
       <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
         <div className="glass rounded-lg px-3 py-1.5 text-xs text-text-secondary">
-          <span className="text-accent-geo font-display font-semibold">OpenGIS</span>
+          <span className="text-accent-geo font-display font-semibold">GeoVela</span>
           <span className="mx-2 text-border">|</span>
           <span>{layers.length} layer{layers.length !== 1 ? 's' : ''}</span>
         </div>

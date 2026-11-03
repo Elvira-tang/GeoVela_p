@@ -12,7 +12,7 @@ export function TypingFooter({ context }: { context?: ActiveWorkState }) {
     <div className="px-5 pb-2 pt-1">
       <div className="flex items-center gap-2.5">
         <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0">
-          <img src={appIconImg} alt="OpenGIS" className="w-full h-full object-contain" />
+          <img src={appIconImg} alt="GeoVela" className="w-full h-full object-contain" />
         </div>
         <ActiveWorkIndicator label={context.label} tone={context.tone} />
       </div>

@@ -1,5 +1,5 @@
 {
-  "name": "opengis",
+  "name": "geovela",
   "version": "0.2.0",
   "description": "AI-powered GIS desktop application — natural language driven geospatial analysis",
   "main": "out/electron/main.js",

@@ -107,7 +107,7 @@ export const en = {
     attachWorkflow: 'Attach workflow',
     browseFiles: 'Browse files',
     emptyState: {
-      title: 'OpenGIS Agent',
+      title: 'GeoVela Agent',
       subtitle: 'Your AI-powered GIS assistant',
       hint: 'Ask me to analyze spatial data, create maps, or run GIS operations.',
       noWorkspace: 'Please open a workspace folder first to enable file operations.',

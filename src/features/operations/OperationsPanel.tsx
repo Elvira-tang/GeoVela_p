@@ -200,7 +200,7 @@ function ScopeBadge({ scope, readOnly }: { scope?: string; readOnly?: boolean })
   return (
     <span
       className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] leading-none ${tone}`}
-      title={readOnly ? 'OpenGIS built-in operation' : 'Workspace operation'}
+      title={readOnly ? 'GeoVela built-in operation' : 'Workspace operation'}
     >
       {label}
     </span>

@@ -63,7 +63,7 @@ export function ChatHeader({
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <div className="relative shrink-0">
             <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center">
-              <img src={appIconImg} alt="OpenGIS" className="w-7 h-7 object-contain" />
+              <img src={appIconImg} alt="GeoVela" className="w-7 h-7 object-contain" />
             </div>
             {isStreaming && (
               <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-accent-success ring-2 ring-[var(--chat-header-bg)] animate-pulse" />
@@ -101,7 +101,7 @@ export function ChatHeader({
                 }}
                 title={t.chat.doubleClickRename}
               >
-                {hasTask ? (conversation?.title || t.chat.newConversation) : 'OpenGIS Agent'}
+                {hasTask ? (conversation?.title || t.chat.newConversation) : 'GeoVela Agent'}
               </span>
             )}
             <span className="block max-w-full truncate whitespace-nowrap text-[10px] text-text-muted leading-tight mt-0.5">

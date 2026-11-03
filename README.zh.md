@@ -1,8 +1,10 @@
 <p align="center">
-  <img src="resources/icons/app-icon.png" alt="OpenGIS" width="120" />
+  <img src="resources/icons/app-icon.png" alt="GeoVela" width="120" />
 </p>
 
-<h1 align="center">OpenGIS</h1>
+<h1 align="center">GeoVela</h1>
+
+> GeoVela 是基于 [ATFfang/OpenGIS](https://github.com/ATFfang/OpenGIS) 源码建立的独立改名开发版本。部分内部标识和资源仍沿用上游命名；原作者署名予以保留。
 
 <p align="center">
   <strong>中文</strong> |

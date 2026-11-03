@@ -195,7 +195,7 @@ export function rasterBBoxForMap(sourceBbox: BBox, crs: string, fileName: string
     return webMercatorBBoxToLonLat(sourceBbox, fileName)
   }
   throw new Error(
-    `parseGeoTIFF: "${fileName}" uses ${crs}. OpenGIS can display GeoTIFF rasters in EPSG:4326 or EPSG:3857 only. ` +
+    `parseGeoTIFF: "${fileName}" uses ${crs}. GeoVela can display GeoTIFF rasters in EPSG:4326 or EPSG:3857 only. ` +
       `Warp it first, for example with gdalwarp -t_srs EPSG:4326.`,
   )
 }

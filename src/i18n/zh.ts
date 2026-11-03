@@ -107,7 +107,7 @@ export const zh = {
     attachWorkflow: '附加工作流',
     browseFiles: '浏览文件',
     emptyState: {
-      title: 'OpenGIS 智能助手',
+      title: 'GeoVela 智能助手',
       subtitle: 'AI 驱动的 GIS 助手',
       hint: '你可以让我分析空间数据、创建地图或执行 GIS 操作。',
       noWorkspace: '请先打开一个工作目录以启用文件操作。',
