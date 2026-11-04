@@ -1095,6 +1095,41 @@
           "maxWindSpeedKmh": 7.6
         }
       ]
+    },
+    {
+      "name": "无锡",
+      "region": "江苏",
+      "latitude": 31.4912,
+      "longitude": 120.3119,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "weatherCode": 81,
+          "maxTemperatureC": 18.7,
+          "minTemperatureC": 15.4,
+          "precipitationMm": 20.4,
+          "precipitationProbabilityPercent": 100,
+          "maxWindSpeedKmh": 25.1
+        },
+        {
+          "date": "2026-11-05",
+          "weatherCode": 51,
+          "maxTemperatureC": 19.1,
+          "minTemperatureC": 14.7,
+          "precipitationMm": 0.1,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 24.2
+        },
+        {
+          "date": "2026-11-06",
+          "weatherCode": 3,
+          "maxTemperatureC": 20.5,
+          "minTemperatureC": 13.3,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 14.8
+        }
+      ]
     }
   ]
 }

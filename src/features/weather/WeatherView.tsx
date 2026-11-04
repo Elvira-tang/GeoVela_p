@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import { Bot, Loader2, Send, Sparkles, Wrench } from 'lucide-react'
 import { useMapStore } from '@/stores/mapStore'
 
 interface ForecastDay {
@@ -28,6 +29,15 @@ interface ModelOutput {
   cities: ModelCity[]
 }
 type MetricKey = 'maxTemperatureC' | 'precipitationMm' | 'precipitationProbabilityPercent' | 'maxWindSpeedKmh'
+
+interface AgentMessage {
+  id: number
+  role: 'user' | 'assistant'
+  text: string
+  tools?: string[]
+  chartCity?: string
+  modelChart?: boolean
+}
 
 const SOURCE_ID = 'geovela-weather-cities'
 const POINT_ID = 'geovela-weather-points'
@@ -144,13 +154,84 @@ function ModelComparisonChart({ city }: { city: ModelCity }) {
   </section>
 }
 
+const QUICK_PROMPTS = ['查看全国未来三天天气', '定位到无锡市', '预测无锡市未来三天天气', '绘制无锡市温度趋势图']
+
+function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
+  sample: WeatherSample
+  model: ModelOutput | null
+  onSelectCity: (name: string) => void
+  onSetMetric: (metric: MetricKey) => void
+  map: { current: maplibregl.Map | null }
+}) {
+  const [input, setInput] = useState('')
+  const [running, setRunning] = useState(false)
+  const [messages, setMessages] = useState<AgentMessage[]>([{ id: 1, role: 'assistant', text: '你好，我是 GeoVela Agent。我可以查询全国天气、定位城市、展示预测并绘制温度趋势图。' }])
+  const nextId = useRef(2)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }) }, [messages, running])
+
+  const run = async (raw: string) => {
+    const text = raw.trim()
+    if (!text || running) return
+    setInput('')
+    setMessages((items) => [...items, { id: nextId.current++, role: 'user', text }])
+    setRunning(true)
+    await new Promise((resolve) => window.setTimeout(resolve, 420))
+    const city = sample.cities.find((item) => text.includes(item.name))
+    const nationwide = /(全国|各城市|代表城市)/.test(text)
+    const locate = /(定位|飞到|缩放到|查找)/.test(text)
+    const chart = /(图表|趋势|折线|绘制)/.test(text)
+    const prediction = /(预测|预报|未来)/.test(text)
+    const rain = /(降雨|下雨|降水)/.test(text)
+    const wind = /(风速|大风)/.test(text)
+    let reply: AgentMessage
+    if (nationwide) {
+      const values = sample.cities.flatMap((item) => item.forecast.map((day) => day.maxTemperatureC))
+      const hottest = sample.cities.reduce((best, item) => item.forecast[0].maxTemperatureC > best.forecast[0].maxTemperatureC ? item : best)
+      const average = values.reduce((sum, value) => sum + value, 0) / values.length
+      onSetMetric(rain ? 'precipitationMm' : wind ? 'maxWindSpeedKmh' : 'maxTemperatureC')
+      map.current?.fitBounds([[73, 18], [135, 54]], { padding: 38, duration: 800 })
+      reply = { id: nextId.current++, role: 'assistant', tools: ['weather.get_forecast', 'map.show_nationwide_weather'], text: `已将 ${sample.cities.length} 个代表城市的未来三天${rain ? '降雨量' : wind ? '最大风速' : '最高气温'}渲染到地图。三天城市最高气温均值约 ${average.toFixed(1)}°C；首日最高为${hottest.name} ${hottest.forecast[0].maxTemperatureC}°C。` }
+    } else if (city) {
+      onSelectCity(city.name)
+      map.current?.flyTo({ center: [city.longitude, city.latitude], zoom: locate ? 8.5 : 6.5, duration: 900 })
+      const tools = ['geo.locate_city', 'map.fly_to']
+      const modelCity = model?.cities.find((item) => item.name === city.name)
+      if (chart) {
+        reply = { id: nextId.current++, role: 'assistant', tools: [...tools, 'weather.get_forecast', 'chart.render_temperature'], chartCity: city.name, text: `已定位${city.name}，并根据三天预报生成最高、最低气温趋势图。` }
+      } else if (prediction && modelCity) {
+        const summary = modelCity.predictions.map((day) => `${day.date.slice(5)} ${day.modelMaxC}°C`).join('，')
+        reply = { id: nextId.current++, role: 'assistant', tools: [...tools, 'weather.predict_temperature', 'chart.render_model_comparison'], modelChart: true, chartCity: city.name, text: `${city.name}未来三天 GeoVela 最高气温预测：${summary}。图中同时展示 Open-Meteo 原始预报供对比。` }
+      } else {
+        const today = city.forecast[0]
+        reply = { id: nextId.current++, role: 'assistant', tools, text: `已定位到${city.name}。${today.date.slice(5)} 预计${weatherDescription(today.weatherCode)}，${today.minTemperatureC}–${today.maxTemperatureC}°C，降雨概率 ${today.precipitationProbabilityPercent}%。` }
+      }
+    } else {
+      reply = { id: nextId.current++, role: 'assistant', text: '我目前可执行全国三天天气、代表城市定位、三天预测和温度趋势图。请尝试“预测无锡市未来三天天气”。' }
+    }
+    setMessages((items) => [...items, reply])
+    setRunning(false)
+  }
+
+  const submit = (event: FormEvent) => { event.preventDefault(); void run(input) }
+  return <section className="flex min-h-[430px] flex-col rounded-xl border border-border bg-bg-secondary shadow-sm">
+    <div className="flex items-center gap-2 border-b border-border px-3 py-3"><span className="rounded-lg bg-accent-primary p-2 text-white"><Bot className="h-4 w-4" /></span><div><h3 className="text-sm font-semibold">GeoVela Agent</h3><p className="text-[10px] text-text-muted">已连接 4 个 GIS 工具组</p></div><span className="ml-auto flex items-center gap-1 text-[10px] text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />就绪</span></div>
+    <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+      {messages.map((message) => <div key={message.id} className={message.role === 'user' ? 'ml-8' : 'mr-2'}><div className={`rounded-xl px-3 py-2 text-xs leading-5 ${message.role === 'user' ? 'bg-accent-primary text-white' : 'border border-border bg-bg-primary'}`}>{message.text}</div>{message.tools && <div className="mt-1.5 flex flex-wrap gap-1">{message.tools.map((tool) => <span key={tool} className="inline-flex items-center gap-1 rounded bg-bg-hover px-1.5 py-1 text-[9px] text-text-muted"><Wrench className="h-2.5 w-2.5" />{tool}</span>)}</div>}{message.chartCity && (() => { const chartCity = sample.cities.find((item) => item.name === message.chartCity); const modelCity = model?.cities.find((item) => item.name === message.chartCity); if (message.modelChart && modelCity) return <div className="mt-2"><ModelComparisonChart city={modelCity} /></div>; return chartCity ? <div className="mt-2"><TemperatureChart city={chartCity} /></div> : null })()}</div>)}
+      {running && <div className="mr-16 flex items-center gap-2 rounded-xl border border-border bg-bg-primary px-3 py-2 text-xs text-text-muted"><Loader2 className="h-3.5 w-3.5 animate-spin" />Agent 正在调用工具…</div>}
+    </div>
+    <div className="border-t border-border p-3"><div className="mb-2 flex gap-1 overflow-x-auto pb-1">{QUICK_PROMPTS.map((prompt) => <button key={prompt} type="button" onClick={() => void run(prompt)} disabled={running} className="shrink-0 rounded-full border border-border bg-bg-primary px-2 py-1 text-[10px] text-text-secondary hover:border-accent-primary hover:text-accent-primary disabled:opacity-50">{prompt}</button>)}</div><form onSubmit={submit} className="flex items-end gap-2"><label className="sr-only" htmlFor="agent-input">向 GeoVela Agent 提问</label><textarea id="agent-input" value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void run(input) } }} placeholder="试试：定位到无锡市" rows={2} className="min-h-[42px] flex-1 resize-none rounded-lg border border-border bg-bg-primary px-3 py-2 text-xs outline-none focus:border-accent-primary" /><button type="submit" disabled={!input.trim() || running} className="rounded-lg bg-accent-primary p-2.5 text-white hover:opacity-90 disabled:opacity-40" aria-label="发送"><Send className="h-4 w-4" /></button></form><p className="mt-2 flex items-center gap-1 text-[9px] text-text-muted"><Sparkles className="h-3 w-3" />MVP 使用受控领域工具，所有结果均来自当前天气数据。</p></div>
+  </section>
+}
+
 export function WeatherView() {
   const [sample, setSample] = useState<WeatherSample | null>(null)
   const [model, setModel] = useState<ModelOutput | null>(null)
   const [modelError, setModelError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dayIndex, setDayIndex] = useState(0)
-  const [selectedName, setSelectedName] = useState('北京')
+  const [selectedName, setSelectedName] = useState('无锡')
   const [metric, setMetric] = useState<MetricKey>('maxTemperatureC')
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -207,9 +288,10 @@ export function WeatherView() {
   return <div className="flex h-full min-h-0 flex-col md:flex-row">
     <div className="min-h-[260px] flex-1 md:min-h-0" ref={mapContainer} aria-label="全国代表城市天气地图" />
     <aside className="w-full shrink-0 overflow-y-auto border-t border-border bg-bg-primary p-4 md:w-[420px] md:border-l md:border-t-0">
-      <h2 className="text-lg font-semibold">全国天气</h2><p className="mt-1 text-xs text-text-muted">31 个代表城市 · 温度、降雨与风速</p>
+      <h2 className="text-lg font-semibold">全国天气</h2><p className="mt-1 text-xs text-text-muted">{sample?.cities.length ?? 32} 个城市 · 温度、降雨与风速</p>
       {error && <p role="alert" className="mt-4 text-sm text-red-600">天气数据加载失败：{error}</p>}{!sample && !error && <p className="mt-4 text-sm">正在加载天气样本…</p>}
       {sample && <>
+        <div className="mt-4"><AgentPanel sample={sample} model={model} onSelectCity={setSelectedName} onSetMetric={setMetric} map={mapRef} /></div>
         <div className="mt-4 grid grid-cols-2 gap-1" role="group" aria-label="选择地图天气指标">{(Object.keys(METRICS) as MetricKey[]).map((key) => <button key={key} type="button" onClick={() => setMetric(key)} aria-pressed={metric === key} className={`rounded px-2 py-2 text-xs ${metric === key ? 'bg-accent-primary text-white' : 'bg-bg-secondary text-text-secondary hover:bg-bg-hover'}`}>{METRICS[key].label}</button>)}</div>
         <div className="mt-2 flex gap-1" role="group" aria-label="选择预报日期">{dates.map((date, index) => <button key={date} type="button" onClick={() => setDayIndex(index)} aria-pressed={dayIndex === index} className={`flex-1 rounded px-2 py-2 text-xs ${dayIndex === index ? 'bg-accent-primary text-white' : 'bg-bg-secondary text-text-secondary hover:bg-bg-hover'}`}>{date.slice(5)}</button>)}</div>
         {model && <div className={`mt-3 rounded-lg border p-3 text-xs ${model.validation.beatsRawForecast ? 'border-green-300 bg-green-50 text-green-900' : 'border-amber-300 bg-amber-50 text-amber-900'}`}>

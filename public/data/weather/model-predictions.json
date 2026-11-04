@@ -1624,6 +1624,15 @@
           "modelMaeC": 1.14
         }
       ]
+    },
+    {
+      "name": "无锡",
+      "predictions": [
+        { "date": "2026-11-04", "horizonDays": 1, "openMeteoMaxC": 18.7, "modelMaxC": 18.7, "correctionC": 0.0 },
+        { "date": "2026-11-05", "horizonDays": 2, "openMeteoMaxC": 19.1, "modelMaxC": 19.0, "correctionC": -0.1 },
+        { "date": "2026-11-06", "horizonDays": 3, "openMeteoMaxC": 20.5, "modelMaxC": 20.2, "correctionC": -0.3 }
+      ],
+      "validation": []
     }
   ]
 }

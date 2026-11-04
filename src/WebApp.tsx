@@ -21,7 +21,7 @@ const VIEWS: Array<{ id: WebView; label: string; icon: typeof MapIcon }> = [
 
 /** Browser edition: local GIS editing without Electron or the Python sidecar. */
 export default function WebApp() {
-  const [activeView, setActiveView] = useState<WebView>('map')
+  const [activeView, setActiveView] = useState<WebView>('weather')
   const showMapLabels = useSettingsStore((state) => state.appearance.showMapLabels)
   const updateAppearance = useSettingsStore((state) => state.updateAppearance)
   const basemap = useMapStore((state) => state.basemap)
@@ -43,7 +43,7 @@ export default function WebApp() {
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-secondary px-4 py-2">
         <div className="flex items-baseline gap-3">
           <h1 className="font-display text-lg font-semibold">GeoVela</h1>
-          <span className="text-xs text-text-muted">在线 GIS 试用版</span>
+          <span className="text-xs text-text-muted">Agent 驱动的在线 GIS</span>
         </div>
         <nav aria-label="网页功能" className="flex flex-wrap items-center gap-1">
           {VIEWS.map(({ id, label, icon: Icon }) => (
@@ -95,7 +95,7 @@ export default function WebApp() {
             ? '属性表可搜索、排序并导出 CSV。'
             : activeView === 'layout'
               ? '制图画布可添加图例、比例尺、文字等元素并导出 PNG。'
-              : '31 个代表城市的三天最高气温样本 · 数据来源：Open-Meteo，CC BY 4.0。'}
+              : 'GeoVela Agent 可通过对话定位城市、查询三天天气并生成图表 · 数据：Open-Meteo。'}
         {activeView !== 'weather' && <span className="ml-2">刷新页面会清除本次导入的图层。</span>}
         <span className="ml-3">{basemap.attribution}{basemap.attribution?.includes('OpenStreetMap') ? '' : ' · © OpenStreetMap contributors'}</span>
       </footer>
