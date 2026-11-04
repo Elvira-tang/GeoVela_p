@@ -20,7 +20,7 @@ describe('Handler registration', () => {
   it('registers expected method count', () => {
     const reg = new HandlerRegistry();
     const names = registerAllHandlers(reg);
-    expect(names.length).toBe(53);
+    expect(names.length).toBe(56);
     // 抽样检查关键 method 在册
     expect(names).toContain('rpc.ui.map.add_layer');
     expect(names).toContain('rpc.ui.map.get_state');

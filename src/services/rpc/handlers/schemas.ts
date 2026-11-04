@@ -83,7 +83,7 @@ export const DynamicLayerUpdateSchema = z.object({
 });
 
 export const AddRasterFromUrlSchema = z.object({
-  url: z.string().min(1),
+  url: z.string().url(),
   name: z.string().min(1),
   tile_type: z.enum(['xyz', 'wmts', 'cog']),
   bounds: BBoxSchema.optional(),
