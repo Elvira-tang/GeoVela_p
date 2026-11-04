@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { Bot, CheckCircle2, Loader2, Send, Settings2, Sparkles, Unplug, Wrench, X } from 'lucide-react'
 import { useMapStore } from '@/stores/mapStore'
 import { resolveWeatherIntent, testWebAgentConnection, type WebAgentConfig } from '@/services/webAgent'
+import { executeToolEvents, type AgentToolEvent, type WeatherMetric } from '@/services/toolEventRouter'
 
 interface ForecastDay {
   date: string
@@ -29,7 +30,7 @@ interface ModelOutput {
   validation: { rawMaeC: number; modelMaeC: number; improvementPercent: number; beatsRawForecast: boolean }
   cities: ModelCity[]
 }
-type MetricKey = 'maxTemperatureC' | 'precipitationMm' | 'precipitationProbabilityPercent' | 'maxWindSpeedKmh'
+type MetricKey = WeatherMetric
 
 interface AgentMessage {
   id: number
@@ -207,22 +208,31 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
       const values = sample.cities.flatMap((item) => item.forecast.map((day) => day.maxTemperatureC))
       const hottest = sample.cities.reduce((best, item) => item.forecast[0].maxTemperatureC > best.forecast[0].maxTemperatureC ? item : best)
       const average = values.reduce((sum, value) => sum + value, 0) / values.length
-      onSetMetric(rain ? 'precipitationMm' : wind ? 'maxWindSpeedKmh' : 'maxTemperatureC')
-      map.current?.fitBounds([[73, 18], [135, 54]], { padding: 38, duration: 800 })
-      reply = { id: nextId.current++, role: 'assistant', tools: [...(config ? ['ai.route_intent'] : []), 'weather.get_forecast', 'map.show_nationwide_weather'], text: `已将 ${sample.cities.length} 个代表城市的未来三天${rain ? '降雨量' : wind ? '最大风速' : '最高气温'}渲染到地图。三天城市最高气温均值约 ${average.toFixed(1)}°C；首日最高为${hottest.name} ${hottest.forecast[0].maxTemperatureC}°C。` }
+      const events: AgentToolEvent[] = [
+        { type: 'tool_call', tool: 'weather.set_metric', arguments: { metric: rain ? 'precipitationMm' : wind ? 'maxWindSpeedKmh' : 'maxTemperatureC' } },
+        { type: 'tool_call', tool: 'map.fit_bounds', arguments: { bounds: [[73, 18], [135, 54]], padding: 38, duration: 800 } },
+      ]
+      const outcome = executeToolEvents(events, { map: map.current, selectCity: onSelectCity, setMetric: onSetMetric })
+      reply = { id: nextId.current++, role: 'assistant', tools: [...(config ? ['ai.route_intent'] : []), 'weather.get_forecast', ...outcome.tools], text: `已将 ${sample.cities.length} 个代表城市的未来三天${rain ? '降雨量' : wind ? '最大风速' : '最高气温'}渲染到地图。三天城市最高气温均值约 ${average.toFixed(1)}°C；首日最高为${hottest.name} ${hottest.forecast[0].maxTemperatureC}°C。` }
     } else if (city) {
-      onSelectCity(city.name)
-      map.current?.flyTo({ center: [city.longitude, city.latitude], zoom: locate ? 8.5 : 6.5, duration: 900 })
-      const tools = [...(config ? ['ai.route_intent'] : []), 'geo.locate_city', 'map.fly_to']
       const modelCity = model?.cities.find((item) => item.name === city.name)
+      const events: AgentToolEvent[] = [
+        { type: 'tool_call', tool: 'weather.select_city', arguments: { city: city.name } },
+        { type: 'tool_call', tool: 'map.fly_to', arguments: { center: [city.longitude, city.latitude], zoom: locate ? 8.5 : 6.5, duration: 900 } },
+      ]
       if (chart) {
-        reply = { id: nextId.current++, role: 'assistant', tools: [...tools, 'weather.get_forecast', 'chart.render_temperature'], chartCity: city.name, text: `已定位${city.name}，并根据三天预报生成最高、最低气温趋势图。` }
+        events.push({ type: 'tool_call', tool: 'chart.render', arguments: { city: city.name, chart: 'temperature' } })
+        const outcome = executeToolEvents(events, { map: map.current, selectCity: onSelectCity, setMetric: onSetMetric })
+        reply = { id: nextId.current++, role: 'assistant', tools: [...(config ? ['ai.route_intent'] : []), 'weather.get_forecast', ...outcome.tools], chartCity: outcome.chartCity, modelChart: outcome.modelChart, text: `已定位${city.name}，并根据三天预报生成最高、最低气温趋势图。` }
       } else if (prediction && modelCity) {
         const summary = modelCity.predictions.map((day) => `${day.date.slice(5)} ${day.modelMaxC}°C`).join('，')
-        reply = { id: nextId.current++, role: 'assistant', tools: [...tools, 'weather.predict_temperature', 'chart.render_model_comparison'], modelChart: true, chartCity: city.name, text: `${city.name}未来三天 GeoVela 最高气温预测：${summary}。图中同时展示 Open-Meteo 原始预报供对比。` }
+        events.push({ type: 'tool_call', tool: 'chart.render', arguments: { city: city.name, chart: 'model-comparison' } })
+        const outcome = executeToolEvents(events, { map: map.current, selectCity: onSelectCity, setMetric: onSetMetric })
+        reply = { id: nextId.current++, role: 'assistant', tools: [...(config ? ['ai.route_intent'] : []), 'weather.predict_temperature', ...outcome.tools], modelChart: outcome.modelChart, chartCity: outcome.chartCity, text: `${city.name}未来三天 GeoVela 最高气温预测：${summary}。图中同时展示 Open-Meteo 原始预报供对比。` }
       } else {
         const today = city.forecast[0]
-        reply = { id: nextId.current++, role: 'assistant', tools, text: `已定位到${city.name}。${today.date.slice(5)} 预计${weatherDescription(today.weatherCode)}，${today.minTemperatureC}–${today.maxTemperatureC}°C，降雨概率 ${today.precipitationProbabilityPercent}%。` }
+        const outcome = executeToolEvents(events, { map: map.current, selectCity: onSelectCity, setMetric: onSetMetric })
+        reply = { id: nextId.current++, role: 'assistant', tools: [...(config ? ['ai.route_intent'] : []), ...outcome.tools], text: `已定位到${city.name}。${today.date.slice(5)} 预计${weatherDescription(today.weatherCode)}，${today.minTemperatureC}–${today.maxTemperatureC}°C，降雨概率 ${today.precipitationProbabilityPercent}%。` }
       }
     } else {
       reply = { id: nextId.current++, role: 'assistant', tools: config ? ['ai.route_intent'] : undefined, text: cityName ? `当前数据集中没有“${cityName}”，请选择已加载的城市。` : '我目前可执行全国三天天气、代表城市定位、三天预测和温度趋势图。请尝试“预测无锡市未来三天天气”。' }
