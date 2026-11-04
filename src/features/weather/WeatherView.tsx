@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { Bot, CheckCircle2, Loader2, Send, Settings2, Sparkles, Unplug, Wrench, X } from 'lucide-react'
+import { Bot, CheckCircle2, Loader2, Send, Settings2, Sparkles, Square, Unplug, Wrench, X } from 'lucide-react'
 import { useMapStore } from '@/stores/mapStore'
 import { resolveWeatherAgentPlan, testWebAgentConnection, type WebAgentConfig } from '@/services/webAgent'
 import { executeToolEvents, type AgentToolEvent, type WeatherMetric } from '@/services/toolEventRouter'
@@ -167,6 +167,8 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
 }) {
   const [input, setInput] = useState('')
   const [running, setRunning] = useState(false)
+  const [runStage, setRunStage] = useState('')
+  const [runningTools, setRunningTools] = useState<string[]>([])
   const [showSettings, setShowSettings] = useState(false)
   const [config, setConfig] = useState<WebAgentConfig | null>(null)
   const [draft, setDraft] = useState<WebAgentConfig>({ transport: 'direct', proxyUrl: '', endpoint: 'https://api.openai.com/v1', model: '', apiKey: '' })
@@ -175,8 +177,10 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
   const [messages, setMessages] = useState<AgentMessage[]>([{ id: 1, role: 'assistant', text: '你好，我是 GeoVela Agent。我可以查询全国天气、定位城市、展示预测并绘制温度趋势图。' }])
   const nextId = useRef(2)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const runController = useRef<AbortController | null>(null)
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }) }, [messages, running])
+  useEffect(() => () => runController.current?.abort(), [])
 
   const run = async (raw: string) => {
     const text = raw.trim()
@@ -184,17 +188,38 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
     setInput('')
     setMessages((items) => [...items, { id: nextId.current++, role: 'user', text }])
     setRunning(true)
+    setRunStage('正在分析请求…')
+    setRunningTools([])
+    const controller = new AbortController()
+    runController.current = controller
+    const timeout = window.setTimeout(() => controller.abort('timeout'), 25_000)
     await new Promise((resolve) => window.setTimeout(resolve, 420))
     let intent = null
     let serverEvents: unknown[] | undefined
     if (config) {
       try {
-        const plan = await resolveWeatherAgentPlan(config, text)
+        const plan = await resolveWeatherAgentPlan(config, text, controller.signal, ({ event, data }) => {
+          const tool = typeof data.tool === 'string' ? data.tool : ''
+          if (event === 'tool_call' && tool) {
+            setRunStage(`正在调用 ${tool}…`)
+            setRunningTools((items) => items.includes(tool) ? items : [...items, tool])
+          } else if (event === 'tool_result') {
+            setRunStage(`已完成 ${tool || '意图分析'}，正在生成执行计划…`)
+          } else if (event === 'assistant_message') {
+            setRunStage('计划已生成，正在更新地图和图表…')
+          }
+        })
         intent = plan.intent
         serverEvents = plan.toolEvents
       } catch (cause) {
-        setMessages((items) => [...items, { id: nextId.current++, role: 'assistant', text: `模型 API 调用失败：${cause instanceof Error ? cause.message : '未知错误'}。请检查端点、模型、Key 和 CORS 设置，或断开 API 使用内置模式。` }])
+        const aborted = controller.signal.aborted
+        const timeoutAbort = controller.signal.reason === 'timeout'
+        setMessages((items) => [...items, { id: nextId.current++, role: 'assistant', text: aborted ? (timeoutAbort ? '请求超过 25 秒，已自动取消。' : '本次 Agent 请求已取消。') : `模型 API 调用失败：${cause instanceof Error ? cause.message : '未知错误'}。请检查端点、模型、Key 和 CORS 设置，或断开 API 使用内置模式。` }])
+        window.clearTimeout(timeout)
+        runController.current = null
         setRunning(false)
+        setRunStage('')
+        setRunningTools([])
         return
       }
     }
@@ -244,7 +269,11 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
       reply = { id: nextId.current++, role: 'assistant', tools: config ? ['ai.route_intent'] : undefined, text: cityName ? `当前数据集中没有“${cityName}”，请选择已加载的城市。` : '我目前可执行全国三天天气、代表城市定位、三天预测和温度趋势图。请尝试“预测无锡市未来三天天气”。' }
     }
     setMessages((items) => [...items, reply])
+    window.clearTimeout(timeout)
+    runController.current = null
     setRunning(false)
+    setRunStage('')
+    setRunningTools([])
   }
 
   const submit = (event: FormEvent) => { event.preventDefault(); void run(input) }
@@ -274,7 +303,7 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
     </div>}
     <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
       {messages.map((message) => <div key={message.id} className={message.role === 'user' ? 'ml-8' : 'mr-2'}><div className={`rounded-xl px-3 py-2 text-xs leading-5 ${message.role === 'user' ? 'bg-accent-primary text-white' : 'border border-border bg-bg-primary'}`}>{message.text}</div>{message.tools && <div className="mt-1.5 flex flex-wrap gap-1">{message.tools.map((tool) => <span key={tool} className="inline-flex items-center gap-1 rounded bg-bg-hover px-1.5 py-1 text-[9px] text-text-muted"><Wrench className="h-2.5 w-2.5" />{tool}</span>)}</div>}{message.chartCity && (() => { const chartCity = sample.cities.find((item) => item.name === message.chartCity); const modelCity = model?.cities.find((item) => item.name === message.chartCity); if (message.modelChart && modelCity) return <div className="mt-2"><ModelComparisonChart city={modelCity} /></div>; return chartCity ? <div className="mt-2"><TemperatureChart city={chartCity} /></div> : null })()}</div>)}
-      {running && <div className="mr-16 flex items-center gap-2 rounded-xl border border-border bg-bg-primary px-3 py-2 text-xs text-text-muted"><Loader2 className="h-3.5 w-3.5 animate-spin" />Agent 正在调用工具…</div>}
+      {running && <div className="mr-8 rounded-xl border border-border bg-bg-primary px-3 py-2 text-xs text-text-muted"><div className="flex items-center gap-2"><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="min-w-0 flex-1 truncate">{runStage || 'Agent 正在调用工具…'}</span><button type="button" onClick={() => runController.current?.abort('user')} className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-red-600 hover:bg-red-50" aria-label="取消 Agent 请求"><Square className="h-3 w-3 fill-current" />取消</button></div>{runningTools.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{runningTools.map((tool) => <span key={tool} className="rounded bg-bg-hover px-1.5 py-1 text-[9px]">{tool}</span>)}</div>}</div>}
     </div>
     <div className="border-t border-border p-3"><div className="mb-2 flex gap-1 overflow-x-auto pb-1">{QUICK_PROMPTS.map((prompt) => <button key={prompt} type="button" onClick={() => void run(prompt)} disabled={running} className="shrink-0 rounded-full border border-border bg-bg-primary px-2 py-1 text-[10px] text-text-secondary hover:border-accent-primary hover:text-accent-primary disabled:opacity-50">{prompt}</button>)}</div><form onSubmit={submit} className="flex items-end gap-2"><label className="sr-only" htmlFor="agent-input">向 GeoVela Agent 提问</label><textarea id="agent-input" value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void run(input) } }} placeholder="试试：定位到无锡市" rows={2} className="min-h-[42px] flex-1 resize-none rounded-lg border border-border bg-bg-primary px-3 py-2 text-xs outline-none focus:border-accent-primary" /><button type="submit" disabled={!input.trim() || running} className="rounded-lg bg-accent-primary p-2.5 text-white hover:opacity-90 disabled:opacity-40" aria-label="发送"><Send className="h-4 w-4" /></button></form><p className="mt-2 flex items-center gap-1 text-[9px] text-text-muted"><Sparkles className="h-3 w-3" />{config ? '模型负责理解意图，地图和数据操作仍由受控工具执行。' : '当前使用内置意图识别；点击齿轮可接入模型 API。'}</p></div>
   </section>

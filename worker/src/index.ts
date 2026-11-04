@@ -118,12 +118,19 @@ function toolEventsForIntent(intent: WeatherIntent): ToolCallEvent[] {
 
 function runResponse(intent: WeatherIntent, cors: Record<string, string>): Response {
 	const routeCall = { type: 'tool_call', tool: 'ai.route_intent', arguments: {} };
-	const body = [
+	const chunks = [
 		sseEvent('tool_call', routeCall),
 		sseEvent('tool_result', { type: 'tool_result', tool: 'ai.route_intent', result: intent }),
 		...toolEventsForIntent(intent).map((event) => sseEvent('tool_call', event)),
 		sseEvent('assistant_message', { type: 'assistant_message', text: '工具计划已生成' }),
-	].join('');
+	];
+	const encoder = new TextEncoder();
+	const body = new ReadableStream<Uint8Array>({
+		start(controller) {
+			for (const chunk of chunks) controller.enqueue(encoder.encode(chunk));
+			controller.close();
+		},
+	});
 	return new Response(body, {
 		status: 200,
 		headers: {

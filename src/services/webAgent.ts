@@ -18,6 +18,11 @@ export interface WeatherAgentPlan {
   toolEvents?: unknown[]
 }
 
+export interface WeatherAgentStreamEvent {
+  event: 'tool_call' | 'tool_result' | 'assistant_message'
+  data: Record<string, unknown>
+}
+
 const SYSTEM_PROMPT = `You route Chinese user requests for a weather GIS web app.
 Return exactly one JSON object and no markdown:
 {"scope":"nationwide|city","city":"Chinese city name without 市 suffix","action":"weather|locate|predict|chart","metric":"temperature|rain|wind"}
@@ -78,22 +83,45 @@ export async function resolveWeatherIntent(config: WebAgentConfig, message: stri
   return parseIntent(content)
 }
 
-function parseSsePayload(text: string): WeatherAgentPlan {
+function parseSseBlock(block: string): WeatherAgentStreamEvent | null {
+  const lines = block.split(/\r?\n/)
+  const event = lines.find((line) => line.startsWith('event:'))?.slice(6).trim()
+  const data = lines.filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trim()).join('\n')
+  if (!event || !data || !['tool_call', 'tool_result', 'assistant_message'].includes(event)) return null
+  return { event: event as WeatherAgentStreamEvent['event'], data: JSON.parse(data) as Record<string, unknown> }
+}
+
+async function readSsePlan(response: Response, onEvent?: (event: WeatherAgentStreamEvent) => void): Promise<WeatherAgentPlan> {
   let intent: WeatherAgentIntent | null = null
   const toolEvents: unknown[] = []
-  for (const block of text.split(/\r?\n\r?\n/)) {
-    const event = block.split(/\r?\n/).find((line) => line.startsWith('event:'))?.slice(6).trim()
-    const data = block.split(/\r?\n/).filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trim()).join('\n')
-    if (!event || !data) continue
-    const value = JSON.parse(data) as Record<string, unknown>
-    if (event === 'tool_call' && value.tool !== 'ai.route_intent') toolEvents.push(value)
-    if (event === 'tool_result' && value.tool === 'ai.route_intent') intent = parseIntent(JSON.stringify(value.result))
+  const consume = (block: string) => {
+    const event = parseSseBlock(block)
+    if (!event) return
+    onEvent?.(event)
+    if (event.event === 'tool_call' && event.data.tool !== 'ai.route_intent') toolEvents.push(event.data)
+    if (event.event === 'tool_result' && event.data.tool === 'ai.route_intent') intent = parseIntent(JSON.stringify(event.data.result))
+  }
+  if (!response.body) {
+    for (const block of (await response.text()).split(/\r?\n\r?\n/)) consume(block)
+  } else {
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      buffer += decoder.decode(value, { stream: !done })
+      const blocks = buffer.split(/\r?\n\r?\n/)
+      buffer = blocks.pop() ?? ''
+      blocks.forEach(consume)
+      if (done) break
+    }
+    if (buffer.trim()) consume(buffer)
   }
   if (!intent) throw new Error('Agent Server 未返回有效意图结果')
   return { intent, toolEvents }
 }
 
-export async function resolveWeatherAgentPlan(config: WebAgentConfig, message: string, signal?: AbortSignal): Promise<WeatherAgentPlan> {
+export async function resolveWeatherAgentPlan(config: WebAgentConfig, message: string, signal?: AbortSignal, onEvent?: (event: WeatherAgentStreamEvent) => void): Promise<WeatherAgentPlan> {
   if (config.transport !== 'proxy') return { intent: await resolveWeatherIntent(config, message, signal) }
   const response = await fetch(`${config.proxyUrl.trim().replace(/\/$/, '')}/v1/run`, {
     method: 'POST',
@@ -105,7 +133,7 @@ export async function resolveWeatherAgentPlan(config: WebAgentConfig, message: s
     const body = await response.json().catch(() => ({})) as { detail?: string }
     throw new Error(`Agent Server ${response.status}${body.detail ? `: ${body.detail}` : ''}`)
   }
-  return parseSsePayload(await response.text())
+  return readSsePlan(response, onEvent)
 }
 
 export async function testWebAgentConnection(config: WebAgentConfig): Promise<void> {

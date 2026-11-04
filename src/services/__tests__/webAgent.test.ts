@@ -32,24 +32,27 @@ describe('web weather agent provider', () => {
 
   it('parses a proxy SSE run into an intent and executable tool events', async () => {
     const originalFetch = globalThis.fetch
+    const observed: string[] = []
     globalThis.fetch = async (input) => {
       expect(String(input)).toBe('https://agent.example.com/v1/run')
-      return new Response([
+      const chunks = [
         'event: tool_call\ndata: {"type":"tool_call","tool":"ai.route_intent","arguments":{}}\n',
         'event: tool_result\ndata: {"type":"tool_result","tool":"ai.route_intent","result":{"scope":"city","city":"无锡","action":"locate","metric":"temperature"}}\n',
         'event: tool_call\ndata: {"type":"tool_call","tool":"weather.select_city","arguments":{"city":"无锡"}}\n',
         'event: tool_call\ndata: {"type":"tool_call","tool":"map.fly_to","arguments":{"city":"无锡","zoom":8.5,"duration":900}}\n',
         'event: assistant_message\ndata: {"type":"assistant_message","text":"工具计划已生成"}\n',
-      ].join('\n'), { headers: { 'Content-Type': 'text/event-stream' } })
+      ].map((chunk) => new TextEncoder().encode(`${chunk}\n`))
+      return new Response(new ReadableStream({ start(controller) { chunks.forEach((chunk) => controller.enqueue(chunk)); controller.close() } }), { headers: { 'Content-Type': 'text/event-stream' } })
     }
     try {
-      await expect(resolveWeatherAgentPlan({ transport: 'proxy', proxyUrl: 'https://agent.example.com', endpoint: 'https://provider.example/v1', model: 'test', apiKey: 'secret' }, '定位无锡')).resolves.toMatchObject({
+      await expect(resolveWeatherAgentPlan({ transport: 'proxy', proxyUrl: 'https://agent.example.com', endpoint: 'https://provider.example/v1', model: 'test', apiKey: 'secret' }, '定位无锡', undefined, (event) => observed.push(`${event.event}:${String(event.data.tool ?? '')}`))).resolves.toMatchObject({
         intent: { city: '无锡', action: 'locate' },
         toolEvents: [
           { tool: 'weather.select_city' },
           { tool: 'map.fly_to' },
         ],
       })
+      expect(observed).toEqual(['tool_call:ai.route_intent', 'tool_result:ai.route_intent', 'tool_call:weather.select_city', 'tool_call:map.fly_to', 'assistant_message:'])
     } finally {
       globalThis.fetch = originalFetch
     }
