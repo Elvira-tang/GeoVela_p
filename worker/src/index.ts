@@ -91,7 +91,14 @@ function errorResponse(error: HttpError, cors: Record<string, string>): Response
 	return jsonResponse({ detail: error.message }, error.status, cors);
 }
 
-function sseEvent(event: string, data: unknown): string {
+function sseEvent(event: string, payload: unknown, runId: string, sequence: number, durationMs?: number): string {
+	const data = {
+		run_id: runId,
+		sequence,
+		emitted_at: new Date().toISOString(),
+		...(durationMs === undefined ? {} : { duration_ms: durationMs }),
+		payload,
+	};
 	return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 }
 
@@ -116,13 +123,15 @@ function toolEventsForIntent(intent: WeatherIntent): ToolCallEvent[] {
 	return events;
 }
 
-function runResponse(intent: WeatherIntent, cors: Record<string, string>): Response {
+function runResponse(intent: WeatherIntent, cors: Record<string, string>, intentDurationMs: number): Response {
+	const runId = crypto.randomUUID();
 	const routeCall = { type: 'tool_call', tool: 'ai.route_intent', arguments: {} };
+	let sequence = 0;
 	const chunks = [
-		sseEvent('tool_call', routeCall),
-		sseEvent('tool_result', { type: 'tool_result', tool: 'ai.route_intent', result: intent }),
-		...toolEventsForIntent(intent).map((event) => sseEvent('tool_call', event)),
-		sseEvent('assistant_message', { type: 'assistant_message', text: '工具计划已生成' }),
+		sseEvent('tool_call', routeCall, runId, ++sequence),
+		sseEvent('tool_result', { type: 'tool_result', tool: 'ai.route_intent', result: intent }, runId, ++sequence, intentDurationMs),
+		...toolEventsForIntent(intent).map((event) => sseEvent('tool_call', event, runId, ++sequence)),
+		sseEvent('assistant_message', { type: 'assistant_message', status: 'success', text: '工具计划已生成' }, runId, ++sequence),
 	];
 	const encoder = new TextEncoder();
 	const body = new ReadableStream<Uint8Array>({
@@ -312,8 +321,9 @@ export default {
 					throw new HttpError(422, 'Request body must be valid JSON');
 				}
 				const payload = parseIntentRequest(body);
+				const startedAt = Date.now();
 				const intent = await routeIntent(payload);
-				return url.pathname === '/v1/run' ? runResponse(intent, cors) : jsonResponse(intent, 200, cors);
+				return url.pathname === '/v1/run' ? runResponse(intent, cors, Date.now() - startedAt) : jsonResponse(intent, 200, cors);
 			}
 			return errorResponse(new HttpError(404, 'Not found'), cors);
 		} catch (error) {

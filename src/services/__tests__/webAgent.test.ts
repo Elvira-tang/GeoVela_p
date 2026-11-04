@@ -36,11 +36,11 @@ describe('web weather agent provider', () => {
     globalThis.fetch = async (input) => {
       expect(String(input)).toBe('https://agent.example.com/v1/run')
       const chunks = [
-        'event: tool_call\ndata: {"type":"tool_call","tool":"ai.route_intent","arguments":{}}\n',
-        'event: tool_result\ndata: {"type":"tool_result","tool":"ai.route_intent","result":{"scope":"city","city":"无锡","action":"locate","metric":"temperature"}}\n',
-        'event: tool_call\ndata: {"type":"tool_call","tool":"weather.select_city","arguments":{"city":"无锡"}}\n',
-        'event: tool_call\ndata: {"type":"tool_call","tool":"map.fly_to","arguments":{"city":"无锡","zoom":8.5,"duration":900}}\n',
-        'event: assistant_message\ndata: {"type":"assistant_message","text":"工具计划已生成"}\n',
+        'event: tool_call\ndata: {"run_id":"run-1","sequence":1,"emitted_at":"2026-11-05T00:00:00Z","payload":{"type":"tool_call","tool":"ai.route_intent","arguments":{}}}\n',
+        'event: tool_result\ndata: {"run_id":"run-1","sequence":2,"emitted_at":"2026-11-05T00:00:01Z","duration_ms":42,"payload":{"type":"tool_result","tool":"ai.route_intent","result":{"scope":"city","city":"无锡","action":"locate","metric":"temperature"}}}\n',
+        'event: tool_call\ndata: {"run_id":"run-1","sequence":3,"emitted_at":"2026-11-05T00:00:02Z","payload":{"type":"tool_call","tool":"weather.select_city","arguments":{"city":"无锡"}}}\n',
+        'event: tool_call\ndata: {"run_id":"run-1","sequence":4,"emitted_at":"2026-11-05T00:00:03Z","payload":{"type":"tool_call","tool":"map.fly_to","arguments":{"city":"无锡","zoom":8.5,"duration":900}}}\n',
+        'event: assistant_message\ndata: {"run_id":"run-1","sequence":5,"emitted_at":"2026-11-05T00:00:04Z","payload":{"type":"assistant_message","text":"工具计划已生成"}}\n',
       ].map((chunk) => new TextEncoder().encode(`${chunk}\n`))
       return new Response(new ReadableStream({ start(controller) { chunks.forEach((chunk) => controller.enqueue(chunk)); controller.close() } }), { headers: { 'Content-Type': 'text/event-stream' } })
     }
@@ -51,6 +51,7 @@ describe('web weather agent provider', () => {
           { tool: 'weather.select_city' },
           { tool: 'map.fly_to' },
         ],
+        runId: 'run-1',
       })
       expect(observed).toEqual(['tool_call:ai.route_intent', 'tool_result:ai.route_intent', 'tool_call:weather.select_city', 'tool_call:map.fly_to', 'assistant_message:'])
     } finally {

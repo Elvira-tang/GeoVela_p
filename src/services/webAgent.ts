@@ -16,11 +16,16 @@ export interface WeatherAgentIntent {
 export interface WeatherAgentPlan {
   intent: WeatherAgentIntent
   toolEvents?: unknown[]
+  runId?: string
 }
 
 export interface WeatherAgentStreamEvent {
   event: 'tool_call' | 'tool_result' | 'assistant_message'
   data: Record<string, unknown>
+  runId: string
+  sequence: number
+  emittedAt: string
+  durationMs?: number
 }
 
 const SYSTEM_PROMPT = `You route Chinese user requests for a weather GIS web app.
@@ -88,15 +93,32 @@ function parseSseBlock(block: string): WeatherAgentStreamEvent | null {
   const event = lines.find((line) => line.startsWith('event:'))?.slice(6).trim()
   const data = lines.filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trim()).join('\n')
   if (!event || !data || !['tool_call', 'tool_result', 'assistant_message'].includes(event)) return null
-  return { event: event as WeatherAgentStreamEvent['event'], data: JSON.parse(data) as Record<string, unknown> }
+  const envelope = JSON.parse(data) as Record<string, unknown>
+  if (typeof envelope.run_id !== 'string' || !Number.isInteger(envelope.sequence) || typeof envelope.emitted_at !== 'string' || typeof envelope.payload !== 'object' || envelope.payload === null) {
+    throw new Error('Agent Server 返回了无效的事件信封')
+  }
+  return {
+    event: event as WeatherAgentStreamEvent['event'],
+    data: envelope.payload as Record<string, unknown>,
+    runId: envelope.run_id,
+    sequence: envelope.sequence as number,
+    emittedAt: envelope.emitted_at,
+    durationMs: typeof envelope.duration_ms === 'number' ? envelope.duration_ms : undefined,
+  }
 }
 
 async function readSsePlan(response: Response, onEvent?: (event: WeatherAgentStreamEvent) => void): Promise<WeatherAgentPlan> {
   let intent: WeatherAgentIntent | null = null
+  let runId: string | undefined
+  let lastSequence = 0
   const toolEvents: unknown[] = []
   const consume = (block: string) => {
     const event = parseSseBlock(block)
     if (!event) return
+    if (runId && event.runId !== runId) throw new Error('Agent Server 在一次响应中返回了多个 run_id')
+    if (event.sequence <= lastSequence) throw new Error('Agent Server 事件序号无效')
+    runId = event.runId
+    lastSequence = event.sequence
     onEvent?.(event)
     if (event.event === 'tool_call' && event.data.tool !== 'ai.route_intent') toolEvents.push(event.data)
     if (event.event === 'tool_result' && event.data.tool === 'ai.route_intent') intent = parseIntent(JSON.stringify(event.data.result))
@@ -118,7 +140,7 @@ async function readSsePlan(response: Response, onEvent?: (event: WeatherAgentStr
     if (buffer.trim()) consume(buffer)
   }
   if (!intent) throw new Error('Agent Server 未返回有效意图结果')
-  return { intent, toolEvents }
+  return { intent, toolEvents, runId }
 }
 
 export async function resolveWeatherAgentPlan(config: WebAgentConfig, message: string, signal?: AbortSignal, onEvent?: (event: WeatherAgentStreamEvent) => void): Promise<WeatherAgentPlan> {

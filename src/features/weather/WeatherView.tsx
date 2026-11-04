@@ -39,6 +39,7 @@ interface AgentMessage {
   tools?: string[]
   chartCity?: string
   modelChart?: boolean
+  run?: { id: string; events: Array<{ sequence: number; event: string; tool?: string; emittedAt: string; durationMs?: number }> }
 }
 
 const SOURCE_ID = 'geovela-weather-cities'
@@ -196,10 +197,14 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
     await new Promise((resolve) => window.setTimeout(resolve, 420))
     let intent = null
     let serverEvents: unknown[] | undefined
+    let runId: string | undefined
+    const runEvents: NonNullable<AgentMessage['run']>['events'] = []
     if (config) {
       try {
-        const plan = await resolveWeatherAgentPlan(config, text, controller.signal, ({ event, data }) => {
+        const plan = await resolveWeatherAgentPlan(config, text, controller.signal, ({ event, data, runId: eventRunId, sequence, emittedAt, durationMs }) => {
           const tool = typeof data.tool === 'string' ? data.tool : ''
+          runId = eventRunId
+          runEvents.push({ sequence, event, tool: tool || undefined, emittedAt, durationMs })
           if (event === 'tool_call' && tool) {
             setRunStage(`正在调用 ${tool}…`)
             setRunningTools((items) => items.includes(tool) ? items : [...items, tool])
@@ -211,10 +216,16 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
         })
         intent = plan.intent
         serverEvents = plan.toolEvents
+        runId = plan.runId
       } catch (cause) {
         const aborted = controller.signal.aborted
         const timeoutAbort = controller.signal.reason === 'timeout'
-        setMessages((items) => [...items, { id: nextId.current++, role: 'assistant', text: aborted ? (timeoutAbort ? '请求超过 25 秒，已自动取消。' : '本次 Agent 请求已取消。') : `模型 API 调用失败：${cause instanceof Error ? cause.message : '未知错误'}。请检查端点、模型、Key 和 CORS 设置，或断开 API 使用内置模式。` }])
+        const failedMessage: AgentMessage = { id: nextId.current++, role: 'assistant', text: aborted ? (timeoutAbort ? '请求超过 25 秒，已自动取消。' : '本次 Agent 请求已取消。') : `模型 API 调用失败：${cause instanceof Error ? cause.message : '未知错误'}。请检查端点、模型、Key 和 CORS 设置，或断开 API 使用内置模式。` }
+        if (runId) {
+          runEvents.push({ sequence: (runEvents[runEvents.length - 1]?.sequence ?? 0) + 1, event: timeoutAbort ? 'run_timeout' : aborted ? 'run_cancelled' : 'run_failed', emittedAt: new Date().toISOString() })
+          failedMessage.run = { id: runId, events: [...runEvents] }
+        }
+        setMessages((items) => [...items, failedMessage])
         window.clearTimeout(timeout)
         runController.current = null
         setRunning(false)
@@ -268,6 +279,7 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
     } else {
       reply = { id: nextId.current++, role: 'assistant', tools: config ? ['ai.route_intent'] : undefined, text: cityName ? `当前数据集中没有“${cityName}”，请选择已加载的城市。` : '我目前可执行全国三天天气、代表城市定位、三天预测和温度趋势图。请尝试“预测无锡市未来三天天气”。' }
     }
+    if (runId && runEvents.length > 0) reply.run = { id: runId, events: [...runEvents] }
     setMessages((items) => [...items, reply])
     window.clearTimeout(timeout)
     runController.current = null
@@ -302,7 +314,7 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
       {connectionState === 'error' && <p role="alert" className="text-[10px] text-red-600">连接失败：{connectionError}</p>}
     </div>}
     <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
-      {messages.map((message) => <div key={message.id} className={message.role === 'user' ? 'ml-8' : 'mr-2'}><div className={`rounded-xl px-3 py-2 text-xs leading-5 ${message.role === 'user' ? 'bg-accent-primary text-white' : 'border border-border bg-bg-primary'}`}>{message.text}</div>{message.tools && <div className="mt-1.5 flex flex-wrap gap-1">{message.tools.map((tool) => <span key={tool} className="inline-flex items-center gap-1 rounded bg-bg-hover px-1.5 py-1 text-[9px] text-text-muted"><Wrench className="h-2.5 w-2.5" />{tool}</span>)}</div>}{message.chartCity && (() => { const chartCity = sample.cities.find((item) => item.name === message.chartCity); const modelCity = model?.cities.find((item) => item.name === message.chartCity); if (message.modelChart && modelCity) return <div className="mt-2"><ModelComparisonChart city={modelCity} /></div>; return chartCity ? <div className="mt-2"><TemperatureChart city={chartCity} /></div> : null })()}</div>)}
+      {messages.map((message) => <div key={message.id} className={message.role === 'user' ? 'ml-8' : 'mr-2'}><div className={`rounded-xl px-3 py-2 text-xs leading-5 ${message.role === 'user' ? 'bg-accent-primary text-white' : 'border border-border bg-bg-primary'}`}>{message.text}</div>{message.tools && <div className="mt-1.5 flex flex-wrap gap-1">{message.tools.map((tool) => <span key={tool} className="inline-flex items-center gap-1 rounded bg-bg-hover px-1.5 py-1 text-[9px] text-text-muted"><Wrench className="h-2.5 w-2.5" />{tool}</span>)}</div>}{message.run && <details className="mt-1.5 rounded border border-border bg-bg-primary px-2 py-1.5 text-[9px] text-text-muted"><summary className="cursor-pointer select-none">执行详情 · {message.run.events.length} 个事件 · {message.run.id.slice(0, 8)}</summary><ol className="mt-1.5 space-y-1 border-l border-border pl-2">{message.run.events.map((item) => <li key={item.sequence} className="flex justify-between gap-2"><span>#{item.sequence} {item.event}{item.tool ? ` · ${item.tool}` : ''}</span><span className="shrink-0">{item.durationMs === undefined ? new Date(item.emittedAt).toLocaleTimeString() : `${item.durationMs} ms`}</span></li>)}</ol></details>}{message.chartCity && (() => { const chartCity = sample.cities.find((item) => item.name === message.chartCity); const modelCity = model?.cities.find((item) => item.name === message.chartCity); if (message.modelChart && modelCity) return <div className="mt-2"><ModelComparisonChart city={modelCity} /></div>; return chartCity ? <div className="mt-2"><TemperatureChart city={chartCity} /></div> : null })()}</div>)}
       {running && <div className="mr-8 rounded-xl border border-border bg-bg-primary px-3 py-2 text-xs text-text-muted"><div className="flex items-center gap-2"><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="min-w-0 flex-1 truncate">{runStage || 'Agent 正在调用工具…'}</span><button type="button" onClick={() => runController.current?.abort('user')} className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-red-600 hover:bg-red-50" aria-label="取消 Agent 请求"><Square className="h-3 w-3 fill-current" />取消</button></div>{runningTools.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{runningTools.map((tool) => <span key={tool} className="rounded bg-bg-hover px-1.5 py-1 text-[9px]">{tool}</span>)}</div>}</div>}
     </div>
     <div className="border-t border-border p-3"><div className="mb-2 flex gap-1 overflow-x-auto pb-1">{QUICK_PROMPTS.map((prompt) => <button key={prompt} type="button" onClick={() => void run(prompt)} disabled={running} className="shrink-0 rounded-full border border-border bg-bg-primary px-2 py-1 text-[10px] text-text-secondary hover:border-accent-primary hover:text-accent-primary disabled:opacity-50">{prompt}</button>)}</div><form onSubmit={submit} className="flex items-end gap-2"><label className="sr-only" htmlFor="agent-input">向 GeoVela Agent 提问</label><textarea id="agent-input" value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void run(input) } }} placeholder="试试：定位到无锡市" rows={2} className="min-h-[42px] flex-1 resize-none rounded-lg border border-border bg-bg-primary px-3 py-2 text-xs outline-none focus:border-accent-primary" /><button type="submit" disabled={!input.trim() || running} className="rounded-lg bg-accent-primary p-2.5 text-white hover:opacity-90 disabled:opacity-40" aria-label="发送"><Send className="h-4 w-4" /></button></form><p className="mt-2 flex items-center gap-1 text-[9px] text-text-muted"><Sparkles className="h-3 w-3" />{config ? '模型负责理解意图，地图和数据操作仍由受控工具执行。' : '当前使用内置意图识别；点击齿轮可接入模型 API。'}</p></div>

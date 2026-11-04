@@ -162,6 +162,9 @@ describe('POST /v1/run', () => {
 		expect(response.status).toBe(200);
 		expect(response.headers.get('content-type')).toContain('text/event-stream');
 		const body = await response.text();
+		expect(body).toMatch(/"run_id":"[^"]+"/);
+		expect(body).toContain('"sequence":1');
+		expect(body).toContain('"duration_ms":');
 		expect(body).toContain('event: tool_result');
 		expect(body).toContain('"tool":"map.fly_to"');
 		expect(body).toContain('"city":"无锡"');
