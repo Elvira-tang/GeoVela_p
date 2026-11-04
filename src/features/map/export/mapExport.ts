@@ -65,7 +65,7 @@ export async function exportMap(
   const dpiScale = clamp(opts.dpiScale ?? 1, 1, 4)
   const fileName =
     opts.fileName ??
-    `opengis-map-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}`
+    `geovela-map-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}`
   const autoDownload = opts.autoDownload ?? true
 
   // ── DPI 提升：临时改 pixelRatio 并重绘，截完恢复 ────────────────

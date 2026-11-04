@@ -193,6 +193,7 @@ function drawScaleBar(
   ctx.font = `${fontSize}px sans-serif`
   ctx.textBaseline = 'bottom'
   labels.forEach((label, index) => {
+    if (labels.length > 3 && index !== 0 && index !== Math.floor((labels.length - 1) / 2) && index !== labels.length - 1) return
     const ratio = labels.length === 1 ? 0.5 : index / (labels.length - 1)
     ctx.textAlign = labels.length === 1 ? 'center' : index === 0 ? 'left' : index === labels.length - 1 ? 'right' : 'center'
     ctx.fillText(label, inner.x + barWidth * ratio, inner.y + inner.height)

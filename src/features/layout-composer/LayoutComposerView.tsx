@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { useMapStore } from '@/stores/mapStore'
 import { exportLayoutAsPng } from './layoutExport'
-import { captureCurrentMapSnapshot } from './mapSnapshot'
+import { captureMapSnapshotAfterIdle } from './mapSnapshot'
 import { InspectorPanel } from './InspectorPanel'
 import { LayoutElementBox } from './LayoutElementBox'
 import { PAGE_PRESETS, useLayoutComposerStore } from './layoutComposerStore'
@@ -91,8 +91,8 @@ export function LayoutComposerView() {
     return () => observer.disconnect()
   }, [])
 
-  const refreshSnapshot = () => {
-    const snapshot = captureCurrentMapSnapshot()
+  const refreshSnapshot = async () => {
+    const snapshot = await captureMapSnapshotAfterIdle()
     if (snapshot) setMapSnapshotUrl(snapshot)
   }
 
@@ -122,7 +122,7 @@ export function LayoutComposerView() {
         mapSnapshotUrl,
         exportOptions: {
           pixelRatio: 2,
-          fileName: `opengis-layout-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}`,
+          fileName: `geovela-layout-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}`,
         },
       })
     } finally {
@@ -188,7 +188,10 @@ export function LayoutComposerView() {
                 <button
                   key={tool.type}
                   onClick={() => {
-                    addElement(tool.type)
+                    const id = addElement(tool.type)
+                    if (tool.type === 'legend') {
+                      updateElementProps(id, { layerIds: layers.filter((layer) => layer.visible).map((layer) => layer.id) })
+                    }
                     setElementMenuOpen(false)
                   }}
                   className="w-full h-8 px-2 flex items-center gap-2 text-xs text-text-secondary hover:bg-bg-hover hover:text-text-primary"

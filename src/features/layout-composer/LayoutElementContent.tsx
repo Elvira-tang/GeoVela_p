@@ -121,6 +121,7 @@ export function renderElementContent(
           )}
         </div>
         {labels.map((label, index) => {
+          if (labels.length > 3 && index !== 0 && index !== Math.floor((labels.length - 1) / 2) && index !== labels.length - 1) return null
           const x = labels.length === 1 ? 50 : (index / (labels.length - 1)) * 100
           return (
             <span

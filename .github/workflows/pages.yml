@@ -1,8 +1,8 @@
-name: Publish GeoVela web preview
+name: Publish GeoVela web
 
 on:
   push:
-    branches: [main, codex/web-mvp]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
