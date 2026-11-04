@@ -1,4 +1,6 @@
 export interface WebAgentConfig {
+  transport: 'direct' | 'proxy'
+  proxyUrl: string
   endpoint: string
   model: string
   apiKey: string
@@ -32,6 +34,19 @@ function parseIntent(content: string): WeatherAgentIntent {
 }
 
 export async function resolveWeatherIntent(config: WebAgentConfig, message: string, signal?: AbortSignal): Promise<WeatherAgentIntent> {
+  if (config.transport === 'proxy') {
+    const response = await fetch(`${config.proxyUrl.trim().replace(/\/$/, '')}/v1/intent`, {
+      method: 'POST',
+      signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint: config.endpoint, model: config.model, api_key: config.apiKey || null, message }),
+    })
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({})) as { detail?: string }
+      throw new Error(`Agent Server ${response.status}${body.detail ? `: ${body.detail}` : ''}`)
+    }
+    return parseIntent(JSON.stringify(await response.json()))
+  }
   const response = await fetch(completionUrl(config.endpoint), {
     method: 'POST',
     signal,

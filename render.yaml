@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: geovela-agent
+    runtime: docker
+    dockerfilePath: ./agent-server/Dockerfile
+    dockerContext: ./agent-server
+    healthCheckPath: /health
+    envVars:
+      - key: GEOVELA_ALLOWED_ORIGINS
+        value: https://elvira-tang.github.io
+      - key: GEOVELA_RATE_LIMIT_PER_MINUTE
+        value: 20
