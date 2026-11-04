@@ -144,3 +144,28 @@ describe('POST /v1/intent', () => {
 		expect(((await third.json()) as { detail: string }).detail).toBe('Too many requests');
 	});
 });
+
+describe('POST /v1/run', () => {
+	it('returns a validated SSE tool plan for a city chart request', async () => {
+		vi.stubGlobal(
+			'fetch',
+			async () => new Response(JSON.stringify({ choices: [{ message: { content: '{"scope":"city","city":"无锡","action":"chart","metric":"temperature"}' } }] })),
+		);
+		const response = await worker.fetch(
+			new Request('https://worker.dev/v1/run', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '203.0.113.44', ...ORIGIN },
+				body: JSON.stringify({ endpoint: 'https://provider.example/v1', model: 'test', message: '绘制无锡温度趋势图' }),
+			}),
+			env,
+		);
+		expect(response.status).toBe(200);
+		expect(response.headers.get('content-type')).toContain('text/event-stream');
+		const body = await response.text();
+		expect(body).toContain('event: tool_result');
+		expect(body).toContain('"tool":"map.fly_to"');
+		expect(body).toContain('"city":"无锡"');
+		expect(body).toContain('"tool":"chart.render"');
+		expect(body).toContain('event: assistant_message');
+	});
+});

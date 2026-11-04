@@ -2,6 +2,7 @@
  * GeoVela Agent Gateway — Cloudflare Worker 版
  * 与原 FastAPI 网关（agent-server/app/main.py）行为保持一致：
  * - POST /v1/intent：把用户消息转发给 OpenAI 兼容端点，返回受控 GIS 意图 JSON
+ * - POST /v1/run：以 SSE 返回意图工具结果、受控工具调用计划和最终消息
  * - GET  /health：健康检查
  * - CORS 来源白名单、每 IP 限流、阻止内网/回环/非 HTTPS 模型端点
  * - API Key 仅转发，不保存
@@ -44,6 +45,12 @@ interface WeatherIntent {
 	metric: 'temperature' | 'rain' | 'wind';
 }
 
+interface ToolCallEvent {
+	type: 'tool_call';
+	tool: string;
+	arguments: Record<string, unknown>;
+}
+
 class HttpError extends Error {
 	constructor(
 		public status: number,
@@ -82,6 +89,50 @@ function jsonResponse(body: unknown, status: number, cors: Record<string, string
 
 function errorResponse(error: HttpError, cors: Record<string, string>): Response {
 	return jsonResponse({ detail: error.message }, error.status, cors);
+}
+
+function sseEvent(event: string, data: unknown): string {
+	return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+}
+
+function toolEventsForIntent(intent: WeatherIntent): ToolCallEvent[] {
+	if (intent.scope === 'nationwide') {
+		const metric = intent.metric === 'rain' ? 'precipitationMm' : intent.metric === 'wind' ? 'maxWindSpeedKmh' : 'maxTemperatureC';
+		return [
+			{ type: 'tool_call', tool: 'weather.set_metric', arguments: { metric } },
+			{ type: 'tool_call', tool: 'map.fit_bounds', arguments: { bounds: [[73, 18], [135, 54]], padding: 38, duration: 800 } },
+		];
+	}
+	const city = (intent.city ?? '').replace(/市$/, '');
+	const events: ToolCallEvent[] = [
+		{ type: 'tool_call', tool: 'weather.select_city', arguments: { city } },
+		{ type: 'tool_call', tool: 'map.fly_to', arguments: { city, zoom: intent.action === 'locate' ? 8.5 : 6.5, duration: 900 } },
+	];
+	if (intent.action === 'chart') {
+		events.push({ type: 'tool_call', tool: 'chart.render', arguments: { city, chart: 'temperature' } });
+	} else if (intent.action === 'predict') {
+		events.push({ type: 'tool_call', tool: 'chart.render', arguments: { city, chart: 'model-comparison' } });
+	}
+	return events;
+}
+
+function runResponse(intent: WeatherIntent, cors: Record<string, string>): Response {
+	const routeCall = { type: 'tool_call', tool: 'ai.route_intent', arguments: {} };
+	const body = [
+		sseEvent('tool_call', routeCall),
+		sseEvent('tool_result', { type: 'tool_result', tool: 'ai.route_intent', result: intent }),
+		...toolEventsForIntent(intent).map((event) => sseEvent('tool_call', event)),
+		sseEvent('assistant_message', { type: 'assistant_message', text: '工具计划已生成' }),
+	].join('');
+	return new Response(body, {
+		status: 200,
+		headers: {
+			'Content-Type': 'text/event-stream; charset=utf-8',
+			'Cache-Control': 'no-cache, no-transform',
+			'X-Accel-Buffering': 'no',
+			...cors,
+		},
+	});
 }
 
 // ---- 限流：优先使用 Cloudflare 原生 Rate Limiting 绑定，缺失时回退到单实例内存限流 ----
@@ -244,7 +295,7 @@ export default {
 			if (request.method === 'GET' && url.pathname === '/health') {
 				return jsonResponse({ status: 'ok' }, 200, cors);
 			}
-			if (request.method === 'POST' && url.pathname === '/v1/intent') {
+			if (request.method === 'POST' && (url.pathname === '/v1/intent' || url.pathname === '/v1/run')) {
 				const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
 				await enforceRateLimit(ip, env);
 				let body: unknown;
@@ -254,7 +305,8 @@ export default {
 					throw new HttpError(422, 'Request body must be valid JSON');
 				}
 				const payload = parseIntentRequest(body);
-				return jsonResponse(await routeIntent(payload), 200, cors);
+				const intent = await routeIntent(payload);
+				return url.pathname === '/v1/run' ? runResponse(intent, cors) : jsonResponse(intent, 200, cors);
 			}
 			return errorResponse(new HttpError(404, 'Not found'), cors);
 		} catch (error) {

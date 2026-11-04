@@ -35,11 +35,18 @@ const toolEventSchema = z.discriminatedUnion('tool', [
   z.object({
     type: z.literal('tool_call'),
     tool: z.literal('map.fly_to'),
-    arguments: z.object({
-      center: coordinateSchema,
-      zoom: z.number().min(0).max(22),
-      duration: z.number().int().min(0).max(5000).default(900),
-    }).strict(),
+    arguments: z.union([
+      z.object({
+        center: coordinateSchema,
+        zoom: z.number().min(0).max(22),
+        duration: z.number().int().min(0).max(5000).default(900),
+      }).strict(),
+      z.object({
+        city: z.string().min(1).max(80),
+        zoom: z.number().min(0).max(22),
+        duration: z.number().int().min(0).max(5000).default(900),
+      }).strict(),
+    ]),
   }).strict(),
   z.object({
     type: z.literal('tool_call'),
@@ -63,6 +70,7 @@ export interface ToolEventContext {
   map: ToolEventMap | null
   selectCity: (city: string) => void
   setMetric: (metric: WeatherMetric) => void
+  resolveCity?: (city: string) => [number, number] | undefined
 }
 
 export interface ToolEventResult {
@@ -91,7 +99,13 @@ export function executeToolEvents(events: unknown, context: ToolEventContext): T
         })
         break
       case 'map.fly_to':
-        context.map?.flyTo(event.arguments)
+        if ('center' in event.arguments) {
+          context.map?.flyTo(event.arguments)
+        } else {
+          const center = context.resolveCity?.(event.arguments.city)
+          if (!center) throw new Error(`无法解析城市坐标：${event.arguments.city}`)
+          context.map?.flyTo({ center, zoom: event.arguments.zoom, duration: event.arguments.duration })
+        }
         break
       case 'chart.render':
         result.chartCity = event.arguments.city
