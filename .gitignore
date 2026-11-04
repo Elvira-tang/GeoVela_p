@@ -130,6 +130,7 @@ scripts/
 
 # ===== Test Data & Scripts =====
 test/
+!worker/test/
 test-data/
 test_data/
 test_data2/
