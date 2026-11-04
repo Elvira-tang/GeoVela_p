@@ -1,8 +1,9 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { Bot, Loader2, Send, Sparkles, Wrench } from 'lucide-react'
+import { Bot, CheckCircle2, Loader2, Send, Settings2, Sparkles, Unplug, Wrench, X } from 'lucide-react'
 import { useMapStore } from '@/stores/mapStore'
+import { resolveWeatherIntent, testWebAgentConnection, type WebAgentConfig } from '@/services/webAgent'
 
 interface ForecastDay {
   date: string
@@ -165,6 +166,11 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
 }) {
   const [input, setInput] = useState('')
   const [running, setRunning] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [config, setConfig] = useState<WebAgentConfig | null>(null)
+  const [draft, setDraft] = useState<WebAgentConfig>({ endpoint: 'https://api.openai.com/v1', model: '', apiKey: '' })
+  const [connectionState, setConnectionState] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
+  const [connectionError, setConnectionError] = useState('')
   const [messages, setMessages] = useState<AgentMessage[]>([{ id: 1, role: 'assistant', text: '你好，我是 GeoVela Agent。我可以查询全国天气、定位城市、展示预测并绘制温度趋势图。' }])
   const nextId = useRef(2)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -178,13 +184,24 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
     setMessages((items) => [...items, { id: nextId.current++, role: 'user', text }])
     setRunning(true)
     await new Promise((resolve) => window.setTimeout(resolve, 420))
-    const city = sample.cities.find((item) => text.includes(item.name))
-    const nationwide = /(全国|各城市|代表城市)/.test(text)
-    const locate = /(定位|飞到|缩放到|查找)/.test(text)
-    const chart = /(图表|趋势|折线|绘制)/.test(text)
-    const prediction = /(预测|预报|未来)/.test(text)
-    const rain = /(降雨|下雨|降水)/.test(text)
-    const wind = /(风速|大风)/.test(text)
+    let intent = null
+    if (config) {
+      try {
+        intent = await resolveWeatherIntent(config, text)
+      } catch (cause) {
+        setMessages((items) => [...items, { id: nextId.current++, role: 'assistant', text: `模型 API 调用失败：${cause instanceof Error ? cause.message : '未知错误'}。请检查端点、模型、Key 和 CORS 设置，或断开 API 使用内置模式。` }])
+        setRunning(false)
+        return
+      }
+    }
+    const cityName = intent?.city?.replace(/市$/, '')
+    const city = sample.cities.find((item) => cityName ? item.name === cityName : text.includes(item.name))
+    const nationwide = intent ? intent.scope === 'nationwide' : /(全国|各城市|代表城市)/.test(text)
+    const locate = intent ? intent.action === 'locate' : /(定位|飞到|缩放到|查找)/.test(text)
+    const chart = intent ? intent.action === 'chart' : /(图表|趋势|折线|绘制)/.test(text)
+    const prediction = intent ? intent.action === 'predict' : /(预测|预报|未来)/.test(text)
+    const rain = intent ? intent.metric === 'rain' : /(降雨|下雨|降水)/.test(text)
+    const wind = intent ? intent.metric === 'wind' : /(风速|大风)/.test(text)
     let reply: AgentMessage
     if (nationwide) {
       const values = sample.cities.flatMap((item) => item.forecast.map((day) => day.maxTemperatureC))
@@ -192,11 +209,11 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
       const average = values.reduce((sum, value) => sum + value, 0) / values.length
       onSetMetric(rain ? 'precipitationMm' : wind ? 'maxWindSpeedKmh' : 'maxTemperatureC')
       map.current?.fitBounds([[73, 18], [135, 54]], { padding: 38, duration: 800 })
-      reply = { id: nextId.current++, role: 'assistant', tools: ['weather.get_forecast', 'map.show_nationwide_weather'], text: `已将 ${sample.cities.length} 个代表城市的未来三天${rain ? '降雨量' : wind ? '最大风速' : '最高气温'}渲染到地图。三天城市最高气温均值约 ${average.toFixed(1)}°C；首日最高为${hottest.name} ${hottest.forecast[0].maxTemperatureC}°C。` }
+      reply = { id: nextId.current++, role: 'assistant', tools: [...(config ? ['ai.route_intent'] : []), 'weather.get_forecast', 'map.show_nationwide_weather'], text: `已将 ${sample.cities.length} 个代表城市的未来三天${rain ? '降雨量' : wind ? '最大风速' : '最高气温'}渲染到地图。三天城市最高气温均值约 ${average.toFixed(1)}°C；首日最高为${hottest.name} ${hottest.forecast[0].maxTemperatureC}°C。` }
     } else if (city) {
       onSelectCity(city.name)
       map.current?.flyTo({ center: [city.longitude, city.latitude], zoom: locate ? 8.5 : 6.5, duration: 900 })
-      const tools = ['geo.locate_city', 'map.fly_to']
+      const tools = [...(config ? ['ai.route_intent'] : []), 'geo.locate_city', 'map.fly_to']
       const modelCity = model?.cities.find((item) => item.name === city.name)
       if (chart) {
         reply = { id: nextId.current++, role: 'assistant', tools: [...tools, 'weather.get_forecast', 'chart.render_temperature'], chartCity: city.name, text: `已定位${city.name}，并根据三天预报生成最高、最低气温趋势图。` }
@@ -208,20 +225,40 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
         reply = { id: nextId.current++, role: 'assistant', tools, text: `已定位到${city.name}。${today.date.slice(5)} 预计${weatherDescription(today.weatherCode)}，${today.minTemperatureC}–${today.maxTemperatureC}°C，降雨概率 ${today.precipitationProbabilityPercent}%。` }
       }
     } else {
-      reply = { id: nextId.current++, role: 'assistant', text: '我目前可执行全国三天天气、代表城市定位、三天预测和温度趋势图。请尝试“预测无锡市未来三天天气”。' }
+      reply = { id: nextId.current++, role: 'assistant', tools: config ? ['ai.route_intent'] : undefined, text: cityName ? `当前数据集中没有“${cityName}”，请选择已加载的城市。` : '我目前可执行全国三天天气、代表城市定位、三天预测和温度趋势图。请尝试“预测无锡市未来三天天气”。' }
     }
     setMessages((items) => [...items, reply])
     setRunning(false)
   }
 
   const submit = (event: FormEvent) => { event.preventDefault(); void run(input) }
+  const connect = async () => {
+    if (!draft.endpoint.trim() || !draft.model.trim()) return
+    setConnectionState('testing'); setConnectionError('')
+    try {
+      await testWebAgentConnection(draft)
+      setConfig({ ...draft }); setConnectionState('success')
+    } catch (cause) {
+      setConnectionState('error'); setConnectionError(cause instanceof Error ? cause.message : '连接失败')
+    }
+  }
+  const disconnect = () => { setConfig(null); setDraft((value) => ({ ...value, apiKey: '' })); setConnectionState('idle') }
   return <section className="flex min-h-[430px] flex-col rounded-xl border border-border bg-bg-secondary shadow-sm">
-    <div className="flex items-center gap-2 border-b border-border px-3 py-3"><span className="rounded-lg bg-accent-primary p-2 text-white"><Bot className="h-4 w-4" /></span><div><h3 className="text-sm font-semibold">GeoVela Agent</h3><p className="text-[10px] text-text-muted">已连接 4 个 GIS 工具组</p></div><span className="ml-auto flex items-center gap-1 text-[10px] text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />就绪</span></div>
+    <div className="flex items-center gap-2 border-b border-border px-3 py-3"><span className="rounded-lg bg-accent-primary p-2 text-white"><Bot className="h-4 w-4" /></span><div><h3 className="text-sm font-semibold">GeoVela Agent</h3><p className="text-[10px] text-text-muted">{config ? `${config.model} · API 模式` : '内置模式 · 4 个 GIS 工具组'}</p></div><span className="ml-auto flex items-center gap-1 text-[10px] text-emerald-600"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />就绪</span><button type="button" onClick={() => setShowSettings((value) => !value)} className="rounded p-1.5 text-text-muted hover:bg-bg-hover" aria-label="Agent API 设置">{showSettings ? <X className="h-4 w-4" /> : <Settings2 className="h-4 w-4" />}</button></div>
+    {showSettings && <div className="space-y-2 border-b border-border bg-bg-primary p-3 text-xs">
+      <div className="flex items-center justify-between"><strong>连接 OpenAI 兼容 API</strong>{config && <button type="button" onClick={disconnect} className="inline-flex items-center gap-1 text-red-600"><Unplug className="h-3 w-3" />断开</button>}</div>
+      <label className="block text-text-muted">API 端点<input value={draft.endpoint} onChange={(event) => setDraft({ ...draft, endpoint: event.target.value })} placeholder="https://api.openai.com/v1" className="mt-1 w-full rounded border border-border bg-bg-secondary px-2 py-1.5 text-text-primary" /></label>
+      <label className="block text-text-muted">模型<input value={draft.model} onChange={(event) => setDraft({ ...draft, model: event.target.value })} placeholder="输入你的模型 ID" className="mt-1 w-full rounded border border-border bg-bg-secondary px-2 py-1.5 text-text-primary" /></label>
+      <label className="block text-text-muted">API Key（只保存在当前页面内存）<input type="password" value={draft.apiKey} onChange={(event) => setDraft({ ...draft, apiKey: event.target.value })} autoComplete="off" placeholder="sk-..." className="mt-1 w-full rounded border border-border bg-bg-secondary px-2 py-1.5 text-text-primary" /></label>
+      <p className="rounded bg-amber-50 p-2 text-[10px] text-amber-800">Key 会从浏览器直接发送到你填写的 API 端点，不会写入 localStorage。公用设备请勿使用长期 Key。端点必须允许浏览器 CORS。</p>
+      <button type="button" onClick={() => void connect()} disabled={!draft.endpoint.trim() || !draft.model.trim() || connectionState === 'testing'} className="flex w-full items-center justify-center gap-1 rounded bg-accent-primary px-3 py-2 text-white disabled:opacity-50">{connectionState === 'testing' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : connectionState === 'success' ? <CheckCircle2 className="h-3.5 w-3.5" /> : null}{connectionState === 'testing' ? '正在测试…' : connectionState === 'success' ? '已连接，重新测试' : '测试并连接'}</button>
+      {connectionState === 'error' && <p role="alert" className="text-[10px] text-red-600">连接失败：{connectionError}</p>}
+    </div>}
     <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
       {messages.map((message) => <div key={message.id} className={message.role === 'user' ? 'ml-8' : 'mr-2'}><div className={`rounded-xl px-3 py-2 text-xs leading-5 ${message.role === 'user' ? 'bg-accent-primary text-white' : 'border border-border bg-bg-primary'}`}>{message.text}</div>{message.tools && <div className="mt-1.5 flex flex-wrap gap-1">{message.tools.map((tool) => <span key={tool} className="inline-flex items-center gap-1 rounded bg-bg-hover px-1.5 py-1 text-[9px] text-text-muted"><Wrench className="h-2.5 w-2.5" />{tool}</span>)}</div>}{message.chartCity && (() => { const chartCity = sample.cities.find((item) => item.name === message.chartCity); const modelCity = model?.cities.find((item) => item.name === message.chartCity); if (message.modelChart && modelCity) return <div className="mt-2"><ModelComparisonChart city={modelCity} /></div>; return chartCity ? <div className="mt-2"><TemperatureChart city={chartCity} /></div> : null })()}</div>)}
       {running && <div className="mr-16 flex items-center gap-2 rounded-xl border border-border bg-bg-primary px-3 py-2 text-xs text-text-muted"><Loader2 className="h-3.5 w-3.5 animate-spin" />Agent 正在调用工具…</div>}
     </div>
-    <div className="border-t border-border p-3"><div className="mb-2 flex gap-1 overflow-x-auto pb-1">{QUICK_PROMPTS.map((prompt) => <button key={prompt} type="button" onClick={() => void run(prompt)} disabled={running} className="shrink-0 rounded-full border border-border bg-bg-primary px-2 py-1 text-[10px] text-text-secondary hover:border-accent-primary hover:text-accent-primary disabled:opacity-50">{prompt}</button>)}</div><form onSubmit={submit} className="flex items-end gap-2"><label className="sr-only" htmlFor="agent-input">向 GeoVela Agent 提问</label><textarea id="agent-input" value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void run(input) } }} placeholder="试试：定位到无锡市" rows={2} className="min-h-[42px] flex-1 resize-none rounded-lg border border-border bg-bg-primary px-3 py-2 text-xs outline-none focus:border-accent-primary" /><button type="submit" disabled={!input.trim() || running} className="rounded-lg bg-accent-primary p-2.5 text-white hover:opacity-90 disabled:opacity-40" aria-label="发送"><Send className="h-4 w-4" /></button></form><p className="mt-2 flex items-center gap-1 text-[9px] text-text-muted"><Sparkles className="h-3 w-3" />MVP 使用受控领域工具，所有结果均来自当前天气数据。</p></div>
+    <div className="border-t border-border p-3"><div className="mb-2 flex gap-1 overflow-x-auto pb-1">{QUICK_PROMPTS.map((prompt) => <button key={prompt} type="button" onClick={() => void run(prompt)} disabled={running} className="shrink-0 rounded-full border border-border bg-bg-primary px-2 py-1 text-[10px] text-text-secondary hover:border-accent-primary hover:text-accent-primary disabled:opacity-50">{prompt}</button>)}</div><form onSubmit={submit} className="flex items-end gap-2"><label className="sr-only" htmlFor="agent-input">向 GeoVela Agent 提问</label><textarea id="agent-input" value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void run(input) } }} placeholder="试试：定位到无锡市" rows={2} className="min-h-[42px] flex-1 resize-none rounded-lg border border-border bg-bg-primary px-3 py-2 text-xs outline-none focus:border-accent-primary" /><button type="submit" disabled={!input.trim() || running} className="rounded-lg bg-accent-primary p-2.5 text-white hover:opacity-90 disabled:opacity-40" aria-label="发送"><Send className="h-4 w-4" /></button></form><p className="mt-2 flex items-center gap-1 text-[9px] text-text-muted"><Sparkles className="h-3 w-3" />{config ? '模型负责理解意图，地图和数据操作仍由受控工具执行。' : '当前使用内置意图识别；点击齿轮可接入模型 API。'}</p></div>
   </section>
 }
 
