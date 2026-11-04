@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "geovela-agent",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-04",
+  "workers_dev": true,
+  "vars": {
+    "ALLOWED_ORIGINS": "https://elvira-tang.github.io,http://127.0.0.1:5173,http://127.0.0.1:5174"
+  }
+}

@@ -11,7 +11,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.spec.ts', 'cloudflare-worker/**/*.test.ts'],
     exclude: ['node_modules', 'out', 'dist'],
     coverage: {
       provider: 'v8',
