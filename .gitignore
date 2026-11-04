@@ -142,3 +142,4 @@ python-backend/pytest_out.txt
 # Local experiments / external repos
 local/
 .npm-cache/
+weather/.cache/

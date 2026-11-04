@@ -1,0 +1,1629 @@
+{
+  "generatedAt": "2026-11-04T09:57:44.535Z",
+  "trainingPeriod": {
+    "start": "2025-01-01",
+    "end": "2026-10-28"
+  },
+  "method": "Per-city ridge regression bias correction using raw forecast, annual seasonality and trailing 30-day forecast bias",
+  "validation": {
+    "scheme": "Earlier 120-sample selection window chooses whether to apply correction; last 120 samples are the untouched test window",
+    "rawMaeC": 0.93,
+    "modelMaeC": 0.94,
+    "improvementPercent": -0.84,
+    "beatsRawForecast": false
+  },
+  "cities": [
+    {
+      "name": "北京",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 13.3,
+          "modelMaxC": 13.5,
+          "correctionC": 0.2
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 16.2,
+          "modelMaxC": 16.3,
+          "correctionC": 0.1
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 12.9,
+          "modelMaxC": 12.9,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.77,
+          "modelMaeC": 0.79
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.0,
+          "modelMaeC": 1.01
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.19,
+          "modelMaeC": 1.21
+        }
+      ]
+    },
+    {
+      "name": "天津",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 17.6,
+          "modelMaxC": 17.8,
+          "correctionC": 0.2
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 16.6,
+          "modelMaxC": 16.8,
+          "correctionC": 0.2
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 13.3,
+          "modelMaxC": 13.5,
+          "correctionC": 0.2
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.65,
+          "modelMaeC": 0.67
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.9,
+          "modelMaeC": 0.91
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.09,
+          "modelMaeC": 1.16
+        }
+      ]
+    },
+    {
+      "name": "石家庄",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 13.3,
+          "modelMaxC": 13.6,
+          "correctionC": 0.3
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 19.9,
+          "modelMaxC": 20.2,
+          "correctionC": 0.3
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 13.8,
+          "modelMaxC": 14.2,
+          "correctionC": 0.4
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.82,
+          "modelMaeC": 0.83
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.05,
+          "modelMaeC": 1.05
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.33,
+          "modelMaeC": 1.31
+        }
+      ]
+    },
+    {
+      "name": "太原",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 11.6,
+          "modelMaxC": 11.6,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 15,
+          "modelMaxC": 15.0,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 14.9,
+          "modelMaxC": 14.9,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.73,
+          "modelMaeC": 0.73
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.12,
+          "modelMaeC": 1.12
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.41,
+          "modelMaeC": 1.41
+        }
+      ]
+    },
+    {
+      "name": "呼和浩特",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 13.1,
+          "modelMaxC": 13.1,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 10.1,
+          "modelMaxC": 10.1,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 8.1,
+          "modelMaxC": 8.1,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.73,
+          "modelMaeC": 0.73
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.99,
+          "modelMaeC": 0.99
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.39,
+          "modelMaeC": 1.39
+        }
+      ]
+    },
+    {
+      "name": "沈阳",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 18,
+          "modelMaxC": 18.0,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 13.6,
+          "modelMaxC": 13.8,
+          "correctionC": 0.2
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 3.8,
+          "modelMaxC": 3.6,
+          "correctionC": -0.2
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.62,
+          "modelMaeC": 0.62
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.87,
+          "modelMaeC": 0.87
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.03,
+          "modelMaeC": 1.07
+        }
+      ]
+    },
+    {
+      "name": "长春",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 14.7,
+          "modelMaxC": 14.7,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 10.9,
+          "modelMaxC": 10.9,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": -1.8,
+          "modelMaxC": -1.8,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.53,
+          "modelMaeC": 0.53
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.63,
+          "modelMaeC": 0.63
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.93,
+          "modelMaeC": 0.93
+        }
+      ]
+    },
+    {
+      "name": "哈尔滨",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 9.5,
+          "modelMaxC": 9.5,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": -0.7,
+          "modelMaxC": -0.7,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": -4.8,
+          "modelMaxC": -4.8,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.63,
+          "modelMaeC": 0.62
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.8,
+          "modelMaeC": 0.8
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.98,
+          "modelMaeC": 0.98
+        }
+      ]
+    },
+    {
+      "name": "上海",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 19.8,
+          "modelMaxC": 19.7,
+          "correctionC": -0.1
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 18.7,
+          "modelMaxC": 18.6,
+          "correctionC": -0.1
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 19.6,
+          "modelMaxC": 19.3,
+          "correctionC": -0.3
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.7,
+          "modelMaeC": 0.75
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.78,
+          "modelMaeC": 0.89
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.98,
+          "modelMaeC": 1.03
+        }
+      ]
+    },
+    {
+      "name": "南京",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 18.7,
+          "modelMaxC": 18.7,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 20.2,
+          "modelMaxC": 20.1,
+          "correctionC": -0.1
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 20.5,
+          "modelMaxC": 20.2,
+          "correctionC": -0.3
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.73,
+          "modelMaeC": 0.73
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.83,
+          "modelMaeC": 0.95
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.06,
+          "modelMaeC": 1.13
+        }
+      ]
+    },
+    {
+      "name": "杭州",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 18.5,
+          "modelMaxC": 18.5,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 21.7,
+          "modelMaxC": 21.7,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 19.9,
+          "modelMaxC": 19.9,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.67,
+          "modelMaeC": 0.67
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.96,
+          "modelMaeC": 0.96
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.09,
+          "modelMaeC": 1.09
+        }
+      ]
+    },
+    {
+      "name": "合肥",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 19.1,
+          "modelMaxC": 19.1,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 21.2,
+          "modelMaxC": 21.2,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 21,
+          "modelMaxC": 21.0,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.73,
+          "modelMaeC": 0.73
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.98,
+          "modelMaeC": 0.98
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.1,
+          "modelMaeC": 1.1
+        }
+      ]
+    },
+    {
+      "name": "福州",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 29.2,
+          "modelMaxC": 29.2,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 31.1,
+          "modelMaxC": 31.1,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 23.6,
+          "modelMaxC": 23.7,
+          "correctionC": 0.1
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.79,
+          "modelMaeC": 0.79
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.08,
+          "modelMaeC": 1.08
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.33,
+          "modelMaeC": 1.29
+        }
+      ]
+    },
+    {
+      "name": "南昌",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 19.3,
+          "modelMaxC": 19.3,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 21.8,
+          "modelMaxC": 21.8,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 20.2,
+          "modelMaxC": 19.9,
+          "correctionC": -0.3
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.58,
+          "modelMaeC": 0.58
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.82,
+          "modelMaeC": 0.82
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.92,
+          "modelMaeC": 0.89
+        }
+      ]
+    },
+    {
+      "name": "济南",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 20.3,
+          "modelMaxC": 20.3,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 18.1,
+          "modelMaxC": 18.3,
+          "correctionC": 0.2
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 15.6,
+          "modelMaxC": 15.7,
+          "correctionC": 0.1
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.7,
+          "modelMaeC": 0.7
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.82,
+          "modelMaeC": 0.88
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.08,
+          "modelMaeC": 1.17
+        }
+      ]
+    },
+    {
+      "name": "郑州",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 15.1,
+          "modelMaxC": 15.1,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 21,
+          "modelMaxC": 21.0,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 17.1,
+          "modelMaxC": 17.1,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.72,
+          "modelMaeC": 0.72
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.97,
+          "modelMaeC": 0.97
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.16,
+          "modelMaeC": 1.18
+        }
+      ]
+    },
+    {
+      "name": "武汉",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 18.2,
+          "modelMaxC": 18.2,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 21.3,
+          "modelMaxC": 21.1,
+          "correctionC": -0.2
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 22.4,
+          "modelMaxC": 21.9,
+          "correctionC": -0.5
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.85,
+          "modelMaeC": 0.85
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.12,
+          "modelMaeC": 1.16
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.4,
+          "modelMaeC": 1.35
+        }
+      ]
+    },
+    {
+      "name": "长沙",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 18.6,
+          "modelMaxC": 18.6,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 21.3,
+          "modelMaxC": 21.3,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 18.3,
+          "modelMaxC": 17.5,
+          "correctionC": -0.8
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.01,
+          "modelMaeC": 1.01
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.27,
+          "modelMaeC": 1.27
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.52,
+          "modelMaeC": 1.43
+        }
+      ]
+    },
+    {
+      "name": "广州",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 30.5,
+          "modelMaxC": 30.5,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 30.5,
+          "modelMaxC": 30.5,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 28.8,
+          "modelMaxC": 28.8,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.65,
+          "modelMaeC": 0.65
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.8,
+          "modelMaeC": 0.8
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.01,
+          "modelMaeC": 1.01
+        }
+      ]
+    },
+    {
+      "name": "南宁",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 29.2,
+          "modelMaxC": 28.9,
+          "correctionC": -0.3
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 29.5,
+          "modelMaxC": 28.8,
+          "correctionC": -0.7
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 27.2,
+          "modelMaxC": 26.6,
+          "correctionC": -0.6
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.63,
+          "modelMaeC": 0.68
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.74,
+          "modelMaeC": 0.85
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.92,
+          "modelMaeC": 0.96
+        }
+      ]
+    },
+    {
+      "name": "海口",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 30.6,
+          "modelMaxC": 30.6,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 30.5,
+          "modelMaxC": 30.5,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 29.7,
+          "modelMaxC": 29.7,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.77,
+          "modelMaeC": 0.77
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.85,
+          "modelMaeC": 0.85
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.0,
+          "modelMaeC": 1.0
+        }
+      ]
+    },
+    {
+      "name": "重庆",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 19.6,
+          "modelMaxC": 19.6,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 19.6,
+          "modelMaxC": 19.6,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 21.1,
+          "modelMaxC": 21.1,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.78,
+          "modelMaeC": 0.78
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.16,
+          "modelMaeC": 1.16
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.35,
+          "modelMaeC": 1.35
+        }
+      ]
+    },
+    {
+      "name": "成都",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 20.2,
+          "modelMaxC": 19.7,
+          "correctionC": -0.5
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 21.4,
+          "modelMaxC": 20.7,
+          "correctionC": -0.7
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 21.4,
+          "modelMaxC": 20.3,
+          "correctionC": -1.1
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.87,
+          "modelMaeC": 0.82
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.1,
+          "modelMaeC": 1.04
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.32,
+          "modelMaeC": 1.25
+        }
+      ]
+    },
+    {
+      "name": "贵阳",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 16.1,
+          "modelMaxC": 16.4,
+          "correctionC": 0.3
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 15.3,
+          "modelMaxC": 15.5,
+          "correctionC": 0.2
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 16.3,
+          "modelMaxC": 16.4,
+          "correctionC": 0.1
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.68,
+          "modelMaeC": 0.75
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.82,
+          "modelMaeC": 0.94
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.93,
+          "modelMaeC": 1.03
+        }
+      ]
+    },
+    {
+      "name": "昆明",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 26,
+          "modelMaxC": 26.0,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 26.4,
+          "modelMaxC": 26.4,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 25.3,
+          "modelMaxC": 24.4,
+          "correctionC": -0.9
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.61,
+          "modelMaeC": 0.61
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.85,
+          "modelMaeC": 0.85
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.99,
+          "modelMaeC": 0.97
+        }
+      ]
+    },
+    {
+      "name": "拉萨",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 14.3,
+          "modelMaxC": 14.3,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 14.7,
+          "modelMaxC": 14.7,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 13.7,
+          "modelMaxC": 13.7,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.51,
+          "modelMaeC": 0.51
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.73,
+          "modelMaeC": 0.73
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.83,
+          "modelMaeC": 0.83
+        }
+      ]
+    },
+    {
+      "name": "西安",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 17.6,
+          "modelMaxC": 17.6,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 19.1,
+          "modelMaxC": 19.1,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 18.3,
+          "modelMaxC": 18.3,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.87,
+          "modelMaeC": 0.87
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.15,
+          "modelMaeC": 1.15
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.37,
+          "modelMaeC": 1.37
+        }
+      ]
+    },
+    {
+      "name": "兰州",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 14.9,
+          "modelMaxC": 14.9,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 13.9,
+          "modelMaxC": 13.9,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 16.4,
+          "modelMaxC": 16.4,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.66,
+          "modelMaeC": 0.66
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.12,
+          "modelMaeC": 1.12
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.32,
+          "modelMaeC": 1.32
+        }
+      ]
+    },
+    {
+      "name": "西宁",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 12.6,
+          "modelMaxC": 12.4,
+          "correctionC": -0.2
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 13.2,
+          "modelMaxC": 12.9,
+          "correctionC": -0.3
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 15,
+          "modelMaxC": 14.4,
+          "correctionC": -0.6
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.76,
+          "modelMaeC": 0.85
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 0.96,
+          "modelMaeC": 1.0
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.19,
+          "modelMaeC": 1.22
+        }
+      ]
+    },
+    {
+      "name": "银川",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 15.5,
+          "modelMaxC": 15.5,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 15.2,
+          "modelMaxC": 14.8,
+          "correctionC": -0.4
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 14.5,
+          "modelMaxC": 14.1,
+          "correctionC": -0.4
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.65,
+          "modelMaeC": 0.65
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.02,
+          "modelMaeC": 0.97
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": true,
+          "rawMaeC": 1.34,
+          "modelMaeC": 1.15
+        }
+      ]
+    },
+    {
+      "name": "乌鲁木齐",
+      "predictions": [
+        {
+          "date": "2026-11-04",
+          "horizonDays": 1,
+          "openMeteoMaxC": 11,
+          "modelMaxC": 11.0,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "horizonDays": 2,
+          "openMeteoMaxC": 8.6,
+          "modelMaxC": 8.6,
+          "correctionC": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "horizonDays": 3,
+          "openMeteoMaxC": 6.7,
+          "modelMaxC": 6.7,
+          "correctionC": 0.0
+        }
+      ],
+      "validation": [
+        {
+          "horizonDays": 1,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.61,
+          "modelMaeC": 0.61
+        },
+        {
+          "horizonDays": 2,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 0.88,
+          "modelMaeC": 0.88
+        },
+        {
+          "horizonDays": 3,
+          "sampleCount": 636,
+          "testStart": "2026-07-01",
+          "correctionEnabled": false,
+          "rawMaeC": 1.14,
+          "modelMaeC": 1.14
+        }
+      ]
+    }
+  ]
+}

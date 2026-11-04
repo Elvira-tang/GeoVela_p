@@ -14,6 +14,19 @@ interface ForecastDay {
 }
 interface CityWeather { name: string; region: string; latitude: number; longitude: number; forecast: ForecastDay[] }
 interface WeatherSample { generatedAt: string; timezone: string; cities: CityWeather[] }
+interface ModelPredictionDay { date: string; horizonDays: number; openMeteoMaxC: number; modelMaxC: number; correctionC: number }
+interface ModelCity {
+  name: string
+  predictions: ModelPredictionDay[]
+  validation: Array<{ horizonDays: number; correctionEnabled: boolean; rawMaeC: number; modelMaeC: number }>
+}
+interface ModelOutput {
+  generatedAt: string
+  trainingPeriod: { start: string; end: string }
+  method: string
+  validation: { rawMaeC: number; modelMaeC: number; improvementPercent: number; beatsRawForecast: boolean }
+  cities: ModelCity[]
+}
 type MetricKey = 'maxTemperatureC' | 'precipitationMm' | 'precipitationProbabilityPercent' | 'maxWindSpeedKmh'
 
 const SOURCE_ID = 'geovela-weather-cities'
@@ -109,8 +122,32 @@ function RainShareChart({ city }: { city: CityWeather }) {
   </div></section>
 }
 
+function ModelComparisonChart({ city }: { city: ModelCity }) {
+  const values = city.predictions.flatMap((day) => [day.openMeteoMaxC, day.modelMaxC])
+  const low = Math.floor(Math.min(...values) - 2)
+  const high = Math.ceil(Math.max(...values) + 2)
+  const y = (value: number) => 112 - ((value - low) / (high - low || 1)) * 80
+  const x = (index: number) => 48 + index * 108
+  const points = (key: 'openMeteoMaxC' | 'modelMaxC') => city.predictions.map((day, index) => `${x(index)},${y(day[key])}`).join(' ')
+  return <section className="rounded-lg border border-border bg-bg-secondary p-3">
+    <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">模型与原始预报</h3><div className="flex gap-2 text-[10px]"><span className="text-slate-500">● 原始</span><span className="text-purple-600">● GeoVela</span></div></div>
+    <svg className="mt-2 w-full" viewBox="0 0 300 150" role="img" aria-label={`${city.name}模型与原始最高气温预报对比图`}>
+      <polyline points={points('openMeteoMaxC')} fill="none" stroke="#64748b" strokeWidth="3" strokeDasharray="5 4" />
+      <polyline points={points('modelMaxC')} fill="none" stroke="#9333ea" strokeWidth="3" />
+      {city.predictions.map((day, index) => <g key={day.date}>
+        <circle cx={x(index)} cy={y(day.openMeteoMaxC)} r="4" fill="#64748b" /><circle cx={x(index)} cy={y(day.modelMaxC)} r="4" fill="#9333ea" />
+        <text x={x(index)} y={y(day.modelMaxC) - 9} textAnchor="middle" fontSize="10" fill="currentColor">{day.modelMaxC}°</text>
+        <text x={x(index)} y="136" textAnchor="middle" fontSize="10" fill="currentColor">{day.date.slice(5)}</text>
+        <text x={x(index)} y="148" textAnchor="middle" fontSize="9" fill="currentColor" opacity="0.65">修正 {day.correctionC > 0 ? '+' : ''}{day.correctionC}°</text>
+      </g>)}
+    </svg>
+  </section>
+}
+
 export function WeatherView() {
   const [sample, setSample] = useState<WeatherSample | null>(null)
+  const [model, setModel] = useState<ModelOutput | null>(null)
+  const [modelError, setModelError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dayIndex, setDayIndex] = useState(0)
   const [selectedName, setSelectedName] = useState('北京')
@@ -131,10 +168,15 @@ export function WeatherView() {
         setSample(data)
       })
       .catch((cause: unknown) => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : '加载失败') })
+    fetch(`${import.meta.env.BASE_URL}data/weather/model-predictions.json`, { signal: controller.signal })
+      .then((response) => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json() as Promise<ModelOutput> })
+      .then(setModel)
+      .catch((cause: unknown) => { if (!controller.signal.aborted) setModelError(cause instanceof Error ? cause.message : '模型结果加载失败') })
     return () => controller.abort()
   }, [])
 
   const selectedCity = useMemo(() => sample?.cities.find((city) => city.name === selectedName) ?? sample?.cities[0], [sample, selectedName])
+  const selectedModelCity = useMemo(() => model?.cities.find((city) => city.name === selectedName), [model, selectedName])
 
   useEffect(() => {
     if (!sample || !mapContainer.current) return
@@ -170,9 +212,16 @@ export function WeatherView() {
       {sample && <>
         <div className="mt-4 grid grid-cols-2 gap-1" role="group" aria-label="选择地图天气指标">{(Object.keys(METRICS) as MetricKey[]).map((key) => <button key={key} type="button" onClick={() => setMetric(key)} aria-pressed={metric === key} className={`rounded px-2 py-2 text-xs ${metric === key ? 'bg-accent-primary text-white' : 'bg-bg-secondary text-text-secondary hover:bg-bg-hover'}`}>{METRICS[key].label}</button>)}</div>
         <div className="mt-2 flex gap-1" role="group" aria-label="选择预报日期">{dates.map((date, index) => <button key={date} type="button" onClick={() => setDayIndex(index)} aria-pressed={dayIndex === index} className={`flex-1 rounded px-2 py-2 text-xs ${dayIndex === index ? 'bg-accent-primary text-white' : 'bg-bg-secondary text-text-secondary hover:bg-bg-hover'}`}>{date.slice(5)}</button>)}</div>
+        {model && <div className={`mt-3 rounded-lg border p-3 text-xs ${model.validation.beatsRawForecast ? 'border-green-300 bg-green-50 text-green-900' : 'border-amber-300 bg-amber-50 text-amber-900'}`}>
+          <div className="font-semibold">GeoVela 实验模型回测</div>
+          <div className="mt-1">原始 MAE {model.validation.rawMaeC}°C → 模型 MAE {model.validation.modelMaeC}°C（{model.validation.improvementPercent > 0 ? '改善' : '变化'} {model.validation.improvementPercent}%）</div>
+          {!model.validation.beatsRawForecast && <div className="mt-1">当前模型未超过原始预报，仅作为训练与比较实验。</div>}
+          <div className="mt-1 opacity-75">训练期：{model.trainingPeriod.start} 至 {model.trainingPeriod.end}</div>
+        </div>}
+        {modelError && <p className="mt-3 text-xs text-amber-700">模型结果暂不可用：{modelError}</p>}
         {selectedCity && selectedDay && <><div className="mt-3 rounded-lg border border-border bg-bg-secondary p-3"><div className="flex items-baseline justify-between"><h3 className="font-semibold">{selectedCity.name}</h3><span className="text-sm">{weatherDescription(selectedDay.weatherCode)}</span></div><div className="mt-2 grid grid-cols-4 gap-2 text-center">
           <div><div className="text-base font-semibold">{selectedDay.maxTemperatureC}°</div><div className="text-[10px] text-text-muted">最高</div></div><div><div className="text-base font-semibold">{selectedDay.precipitationMm}</div><div className="text-[10px] text-text-muted">降雨 mm</div></div><div><div className="text-base font-semibold">{selectedDay.precipitationProbabilityPercent}%</div><div className="text-[10px] text-text-muted">降雨概率</div></div><div><div className="text-base font-semibold">{selectedDay.maxWindSpeedKmh}</div><div className="text-[10px] text-text-muted">风速 km/h</div></div>
-        </div></div><div className="mt-3 space-y-3"><TemperatureChart city={selectedCity} /><RainBarChart city={selectedCity} /><RainShareChart city={selectedCity} /></div></>}
+        </div></div><div className="mt-3 space-y-3">{selectedModelCity && <ModelComparisonChart city={selectedModelCity} />}<TemperatureChart city={selectedCity} /><RainBarChart city={selectedCity} /><RainShareChart city={selectedCity} /></div></>}
         <p className="mt-4 text-xs text-text-muted">点击地图城市查看图表。样本生成：{new Date(sample.generatedAt).toLocaleString('zh-CN', { timeZone: sample.timezone })}，不会自动更新。</p><p className="mt-2 text-xs text-text-muted">数据：<a href="https://open-meteo.com/" target="_blank" rel="noreferrer" className="underline">Open-Meteo</a>（CC BY 4.0）。城市点位不代表全国连续天气分布。</p>
       </>}
     </aside>
