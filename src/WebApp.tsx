@@ -1,20 +1,22 @@
 import { useState } from 'react'
-import { LayoutTemplate, Map as MapIcon, Table } from 'lucide-react'
+import { CloudSun, LayoutTemplate, Map as MapIcon, Table } from 'lucide-react'
 import { DataTable } from '@/features/data/DataTable'
 import { LayerPanel } from '@/features/layers/LayerPanel'
 import { LayoutComposerView } from '@/features/layout-composer/LayoutComposerView'
 import { captureCurrentMapSnapshot, captureMapSnapshotAfterIdle } from '@/features/layout-composer/mapSnapshot'
 import { MapView } from '@/features/map/MapView'
+import { WeatherView } from '@/features/weather/WeatherView'
 import { useMapStore } from '@/stores/mapStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useLayoutComposerStore } from '@/features/layout-composer/layoutComposerStore'
 
-type WebView = 'map' | 'table' | 'layout'
+type WebView = 'map' | 'table' | 'layout' | 'weather'
 
 const VIEWS: Array<{ id: WebView; label: string; icon: typeof MapIcon }> = [
   { id: 'map', label: '地图与图层样式', icon: MapIcon },
   { id: 'table', label: '属性表', icon: Table },
   { id: 'layout', label: '制图画布', icon: LayoutTemplate },
+  { id: 'weather', label: '全国天气', icon: CloudSun },
 ]
 
 /** Browser edition: local GIS editing without Electron or the Python sidecar. */
@@ -83,6 +85,7 @@ export default function WebApp() {
           </div>
           {activeView === 'table' && <div className="absolute inset-0 z-10 bg-bg-primary"><DataTable /></div>}
           {activeView === 'layout' && <div className="absolute inset-0 z-10 bg-bg-primary"><LayoutComposerView /></div>}
+          {activeView === 'weather' && <div className="absolute inset-0 z-10 bg-bg-primary"><WeatherView /></div>}
         </main>
       </div>
       <footer className="shrink-0 border-t border-border bg-bg-secondary px-4 py-1 text-[11px] text-text-muted">
@@ -90,8 +93,10 @@ export default function WebApp() {
           ? '添加地图文件后，展开左侧图层可调整样式；地图工具栏可导出 PNG 或 JPG。'
           : activeView === 'table'
             ? '属性表可搜索、排序并导出 CSV。'
-            : '制图画布可添加图例、比例尺、文字等元素并导出 PNG。'}
-        <span className="ml-2">刷新页面会清除本次导入的图层。</span>
+            : activeView === 'layout'
+              ? '制图画布可添加图例、比例尺、文字等元素并导出 PNG。'
+              : '31 个代表城市的三天最高气温样本 · 数据来源：Open-Meteo，CC BY 4.0。'}
+        {activeView !== 'weather' && <span className="ml-2">刷新页面会清除本次导入的图层。</span>}
         <span className="ml-3">{basemap.attribution}{basemap.attribution?.includes('OpenStreetMap') ? '' : ' · © OpenStreetMap contributors'}</span>
       </footer>
     </div>

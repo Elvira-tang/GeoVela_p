@@ -1,0 +1,631 @@
+{
+  "generatedAt": "2026-11-04T09:29:53.993Z",
+  "source": "Open-Meteo Forecast API (CC BY 4.0)",
+  "sourceUrl": "https://open-meteo.com/en/docs",
+  "timezone": "Asia/Shanghai",
+  "metric": "daily maximum temperature",
+  "unit": "°C",
+  "coverage": "31 representative mainland cities; not a nationwide weather grid",
+  "cities": [
+    {
+      "name": "北京",
+      "region": "北京",
+      "latitude": 39.9042,
+      "longitude": 116.4074,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 13.3
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 16.2
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 12.9
+        }
+      ]
+    },
+    {
+      "name": "天津",
+      "region": "天津",
+      "latitude": 39.0842,
+      "longitude": 117.2009,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 17.6
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 16.6
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 13.3
+        }
+      ]
+    },
+    {
+      "name": "石家庄",
+      "region": "河北",
+      "latitude": 38.0428,
+      "longitude": 114.5149,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 13.3
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 19.9
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 13.8
+        }
+      ]
+    },
+    {
+      "name": "太原",
+      "region": "山西",
+      "latitude": 37.8706,
+      "longitude": 112.5489,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 11.6
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 15
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 14.9
+        }
+      ]
+    },
+    {
+      "name": "呼和浩特",
+      "region": "内蒙古",
+      "latitude": 40.8426,
+      "longitude": 111.7492,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 13.1
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 10.1
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 8.1
+        }
+      ]
+    },
+    {
+      "name": "沈阳",
+      "region": "辽宁",
+      "latitude": 41.8057,
+      "longitude": 123.4315,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 18
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 13.6
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 3.8
+        }
+      ]
+    },
+    {
+      "name": "长春",
+      "region": "吉林",
+      "latitude": 43.8171,
+      "longitude": 125.3235,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 14.7
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 10.9
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": -1.8
+        }
+      ]
+    },
+    {
+      "name": "哈尔滨",
+      "region": "黑龙江",
+      "latitude": 45.8038,
+      "longitude": 126.535,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 9.5
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": -0.7
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": -4.8
+        }
+      ]
+    },
+    {
+      "name": "上海",
+      "region": "上海",
+      "latitude": 31.2304,
+      "longitude": 121.4737,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 19.8
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 18.7
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 19.6
+        }
+      ]
+    },
+    {
+      "name": "南京",
+      "region": "江苏",
+      "latitude": 32.0603,
+      "longitude": 118.7969,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 18.7
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 20.2
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 20.5
+        }
+      ]
+    },
+    {
+      "name": "杭州",
+      "region": "浙江",
+      "latitude": 30.2741,
+      "longitude": 120.1551,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 18.5
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 21.7
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 19.9
+        }
+      ]
+    },
+    {
+      "name": "合肥",
+      "region": "安徽",
+      "latitude": 31.8206,
+      "longitude": 117.2272,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 19.1
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 21.2
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 21
+        }
+      ]
+    },
+    {
+      "name": "福州",
+      "region": "福建",
+      "latitude": 26.0745,
+      "longitude": 119.2965,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 29.2
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 31.1
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 23.6
+        }
+      ]
+    },
+    {
+      "name": "南昌",
+      "region": "江西",
+      "latitude": 28.682,
+      "longitude": 115.8579,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 19.3
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 21.8
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 20.2
+        }
+      ]
+    },
+    {
+      "name": "济南",
+      "region": "山东",
+      "latitude": 36.6512,
+      "longitude": 117.1201,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 20.3
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 18.1
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 15.6
+        }
+      ]
+    },
+    {
+      "name": "郑州",
+      "region": "河南",
+      "latitude": 34.7466,
+      "longitude": 113.6254,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 15.1
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 21
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 17.1
+        }
+      ]
+    },
+    {
+      "name": "武汉",
+      "region": "湖北",
+      "latitude": 30.5928,
+      "longitude": 114.3055,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 18.2
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 21.3
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 22.4
+        }
+      ]
+    },
+    {
+      "name": "长沙",
+      "region": "湖南",
+      "latitude": 28.2282,
+      "longitude": 112.9388,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 18.6
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 21.3
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 18.3
+        }
+      ]
+    },
+    {
+      "name": "广州",
+      "region": "广东",
+      "latitude": 23.1291,
+      "longitude": 113.2644,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 30.5
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 30.5
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 28.8
+        }
+      ]
+    },
+    {
+      "name": "南宁",
+      "region": "广西",
+      "latitude": 22.817,
+      "longitude": 108.3669,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 29.2
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 29.5
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 27.2
+        }
+      ]
+    },
+    {
+      "name": "海口",
+      "region": "海南",
+      "latitude": 20.044,
+      "longitude": 110.1983,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 30.6
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 30.5
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 29.7
+        }
+      ]
+    },
+    {
+      "name": "重庆",
+      "region": "重庆",
+      "latitude": 29.563,
+      "longitude": 106.5516,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 19.6
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 19.6
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 21.1
+        }
+      ]
+    },
+    {
+      "name": "成都",
+      "region": "四川",
+      "latitude": 30.5728,
+      "longitude": 104.0668,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 20.2
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 21.4
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 21.4
+        }
+      ]
+    },
+    {
+      "name": "贵阳",
+      "region": "贵州",
+      "latitude": 26.647,
+      "longitude": 106.6302,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 16.1
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 15.3
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 16.3
+        }
+      ]
+    },
+    {
+      "name": "昆明",
+      "region": "云南",
+      "latitude": 25.0389,
+      "longitude": 102.7183,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 26
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 26.4
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 25.3
+        }
+      ]
+    },
+    {
+      "name": "拉萨",
+      "region": "西藏",
+      "latitude": 29.6525,
+      "longitude": 91.1721,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 14.3
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 14.7
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 13.7
+        }
+      ]
+    },
+    {
+      "name": "西安",
+      "region": "陕西",
+      "latitude": 34.3416,
+      "longitude": 108.9398,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 17.6
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 19.1
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 18.3
+        }
+      ]
+    },
+    {
+      "name": "兰州",
+      "region": "甘肃",
+      "latitude": 36.0611,
+      "longitude": 103.8343,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 14.9
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 13.9
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 16.4
+        }
+      ]
+    },
+    {
+      "name": "西宁",
+      "region": "青海",
+      "latitude": 36.6171,
+      "longitude": 101.7782,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 12.6
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 13.2
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 15
+        }
+      ]
+    },
+    {
+      "name": "银川",
+      "region": "宁夏",
+      "latitude": 38.4872,
+      "longitude": 106.2309,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 15.5
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 15.2
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 14.5
+        }
+      ]
+    },
+    {
+      "name": "乌鲁木齐",
+      "region": "新疆",
+      "latitude": 43.8256,
+      "longitude": 87.6168,
+      "forecast": [
+        {
+          "date": "2026-11-04",
+          "maxTemperatureC": 11
+        },
+        {
+          "date": "2026-11-05",
+          "maxTemperatureC": 8.6
+        },
+        {
+          "date": "2026-11-06",
+          "maxTemperatureC": 6.7
+        }
+      ]
+    }
+  ]
+}
