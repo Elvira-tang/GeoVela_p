@@ -32,8 +32,13 @@ const proxy = Object.fromEntries(
   }),
 )
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
+  build: mode === 'web' ? {
+    rollupOptions: {
+      input: { index: resolve(__dirname, 'web.html') },
+    },
+  } : undefined,
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -48,4 +53,4 @@ export default defineConfig({
     },
     proxy,
   },
-})
+}))

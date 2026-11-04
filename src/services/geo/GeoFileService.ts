@@ -202,6 +202,17 @@ function buildLayerDefinition(
         raster: data.kind === 'raster' ? data.rasterStyle : undefined,
       }
 
+  // Show a source's own place names when it has a text `name` field.
+  if (data.kind === 'vector' && data.fields.some((field) => field.name === 'name' && field.type === 'string')) {
+    style.label = {
+      field: 'name',
+      fontSize: 12,
+      color: '#1f2937',
+      haloColor: '#ffffff',
+      haloWidth: 1.5,
+    }
+  }
+
   const id = uuidv4()
   const finalData = data.kind === 'vector' && shouldHandleLayer(meta.fileSize)
     ? makeHandledVectorData(data, {

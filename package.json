@@ -10,6 +10,7 @@
     "dev": "vite",
     "dev:electron": "electron-vite dev",
     "build": "electron-vite build",
+    "build:web": "vite build --mode web --base=/GeoVela/ && node -e \"require('node:fs').renameSync('dist/web.html','dist/index.html')\"",
     "preview": "electron-vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
