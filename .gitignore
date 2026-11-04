@@ -114,6 +114,12 @@ doc/
 ARCHITECTURE_SPEC.md
 Internal-Agent-Projects.md
 
+# ===== Cloudflare Worker =====
+.wrangler/
+.wrangler-home/
+.wrangler-dry-run/
+worker/.dev.vars
+
 # ===== AI Tool Local Caches =====
 .workbuddy/
 .codebuddy/
