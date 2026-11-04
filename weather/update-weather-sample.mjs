@@ -24,7 +24,14 @@ const cities = [
 const params = new URLSearchParams({
   latitude: cities.map((city) => city[2]).join(','),
   longitude: cities.map((city) => city[3]).join(','),
-  daily: 'temperature_2m_max',
+  daily: [
+    'weather_code',
+    'temperature_2m_max',
+    'temperature_2m_min',
+    'precipitation_sum',
+    'precipitation_probability_max',
+    'wind_speed_10m_max',
+  ].join(','),
   forecast_days: '3',
   timezone: 'Asia/Shanghai',
 })
@@ -40,17 +47,37 @@ const output = {
   source: 'Open-Meteo Forecast API (CC BY 4.0)',
   sourceUrl: 'https://open-meteo.com/en/docs',
   timezone: 'Asia/Shanghai',
-  metric: 'daily maximum temperature',
-  unit: '°C',
+  metrics: [
+    'weather code',
+    'daily maximum and minimum temperature',
+    'daily precipitation sum and maximum probability',
+    'daily maximum wind speed',
+  ],
   coverage: '31 representative mainland cities; not a nationwide weather grid',
   cities: cities.map(([name, region, latitude, longitude], index) => {
     const daily = forecasts[index].daily
-    if (daily?.time?.length !== 3 || daily.temperature_2m_max?.length !== 3) {
+    const required = [
+      daily?.weather_code,
+      daily?.temperature_2m_max,
+      daily?.temperature_2m_min,
+      daily?.precipitation_sum,
+      daily?.precipitation_probability_max,
+      daily?.wind_speed_10m_max,
+    ]
+    if (daily?.time?.length !== 3 || required.some((values) => values?.length !== 3)) {
       throw new Error(`Incomplete forecast for ${name}`)
     }
     return {
       name, region, latitude, longitude,
-      forecast: daily.time.map((date, day) => ({ date, maxTemperatureC: daily.temperature_2m_max[day] })),
+      forecast: daily.time.map((date, day) => ({
+        date,
+        weatherCode: daily.weather_code[day],
+        maxTemperatureC: daily.temperature_2m_max[day],
+        minTemperatureC: daily.temperature_2m_min[day],
+        precipitationMm: daily.precipitation_sum[day],
+        precipitationProbabilityPercent: daily.precipitation_probability_max[day],
+        maxWindSpeedKmh: daily.wind_speed_10m_max[day],
+      })),
     }
   }),
 }

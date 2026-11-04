@@ -1,10 +1,14 @@
 {
-  "generatedAt": "2026-11-04T09:29:53.993Z",
+  "generatedAt": "2026-11-04T09:57:44.535Z",
   "source": "Open-Meteo Forecast API (CC BY 4.0)",
   "sourceUrl": "https://open-meteo.com/en/docs",
   "timezone": "Asia/Shanghai",
-  "metric": "daily maximum temperature",
-  "unit": "°C",
+  "metrics": [
+    "weather code",
+    "daily maximum and minimum temperature",
+    "daily precipitation sum and maximum probability",
+    "daily maximum wind speed"
+  ],
   "coverage": "31 representative mainland cities; not a nationwide weather grid",
   "cities": [
     {
@@ -15,15 +19,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 13.3
+          "weatherCode": 3,
+          "maxTemperatureC": 13.3,
+          "minTemperatureC": 4.8,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 2,
+          "maxWindSpeedKmh": 6.5
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 16.2
+          "weatherCode": 45,
+          "maxTemperatureC": 16.2,
+          "minTemperatureC": 4.7,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 17.7
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 12.9
+          "weatherCode": 1,
+          "maxTemperatureC": 12.9,
+          "minTemperatureC": 3.4,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 7.3
         }
       ]
     },
@@ -35,15 +54,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 17.6
+          "weatherCode": 3,
+          "maxTemperatureC": 17.6,
+          "minTemperatureC": 9.9,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 43,
+          "maxWindSpeedKmh": 14.4
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 16.6
+          "weatherCode": 45,
+          "maxTemperatureC": 16.6,
+          "minTemperatureC": 7.5,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 19.3
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 13.3
+          "weatherCode": 1,
+          "maxTemperatureC": 13.3,
+          "minTemperatureC": 4.6,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 4,
+          "maxWindSpeedKmh": 7.6
         }
       ]
     },
@@ -55,15 +89,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 13.3
+          "weatherCode": 53,
+          "maxTemperatureC": 13.3,
+          "minTemperatureC": 6.5,
+          "precipitationMm": 1.4,
+          "precipitationProbabilityPercent": 61,
+          "maxWindSpeedKmh": 12.7
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 19.9
+          "weatherCode": 0,
+          "maxTemperatureC": 19.9,
+          "minTemperatureC": 9.5,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 15.3
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 13.8
+          "weatherCode": 0,
+          "maxTemperatureC": 13.8,
+          "minTemperatureC": 4,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 8
         }
       ]
     },
@@ -75,15 +124,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 11.6
+          "weatherCode": 51,
+          "maxTemperatureC": 11.6,
+          "minTemperatureC": 4.2,
+          "precipitationMm": 0.4,
+          "precipitationProbabilityPercent": 37,
+          "maxWindSpeedKmh": 14.4
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 15
+          "weatherCode": 0,
+          "maxTemperatureC": 15,
+          "minTemperatureC": 3.2,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 15.9
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 14.9
+          "weatherCode": 0,
+          "maxTemperatureC": 14.9,
+          "minTemperatureC": 1.7,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 6.9
         }
       ]
     },
@@ -95,15 +159,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 13.1
+          "weatherCode": 3,
+          "maxTemperatureC": 13.1,
+          "minTemperatureC": -0.3,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 16.4
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 10.1
+          "weatherCode": 2,
+          "maxTemperatureC": 10.1,
+          "minTemperatureC": -2.6,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 11
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 8.1
+          "weatherCode": 2,
+          "maxTemperatureC": 8.1,
+          "minTemperatureC": -3,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 13.2
         }
       ]
     },
@@ -115,15 +194,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 18
+          "weatherCode": 3,
+          "maxTemperatureC": 18,
+          "minTemperatureC": 7.1,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 2,
+          "maxWindSpeedKmh": 24.5
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 13.6
+          "weatherCode": 3,
+          "maxTemperatureC": 13.6,
+          "minTemperatureC": 0.3,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 45,
+          "maxWindSpeedKmh": 18.7
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 3.8
+          "weatherCode": 0,
+          "maxTemperatureC": 3.8,
+          "minTemperatureC": -2.6,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 18.5
         }
       ]
     },
@@ -135,15 +229,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 14.7
+          "weatherCode": 51,
+          "maxTemperatureC": 14.7,
+          "minTemperatureC": 1.9,
+          "precipitationMm": 0.5,
+          "precipitationProbabilityPercent": 25,
+          "maxWindSpeedKmh": 22.4
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 10.9
+          "weatherCode": 71,
+          "maxTemperatureC": 10.9,
+          "minTemperatureC": -4.5,
+          "precipitationMm": 0.3,
+          "precipitationProbabilityPercent": 25,
+          "maxWindSpeedKmh": 20.4
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": -1.8
+          "weatherCode": 3,
+          "maxTemperatureC": -1.8,
+          "minTemperatureC": -5.5,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 4,
+          "maxWindSpeedKmh": 20.7
         }
       ]
     },
@@ -155,15 +264,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 9.5
+          "weatherCode": 3,
+          "maxTemperatureC": 9.5,
+          "minTemperatureC": -2.7,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 14,
+          "maxWindSpeedKmh": 16.3
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": -0.7
+          "weatherCode": 71,
+          "maxTemperatureC": -0.7,
+          "minTemperatureC": -8.7,
+          "precipitationMm": 0.7,
+          "precipitationProbabilityPercent": 37,
+          "maxWindSpeedKmh": 17.7
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": -4.8
+          "weatherCode": 3,
+          "maxTemperatureC": -4.8,
+          "minTemperatureC": -10.8,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 14,
+          "maxWindSpeedKmh": 25
         }
       ]
     },
@@ -175,15 +299,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 19.8
+          "weatherCode": 81,
+          "maxTemperatureC": 19.8,
+          "minTemperatureC": 15.7,
+          "precipitationMm": 29.3,
+          "precipitationProbabilityPercent": 100,
+          "maxWindSpeedKmh": 17.5
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 18.7
+          "weatherCode": 3,
+          "maxTemperatureC": 18.7,
+          "minTemperatureC": 13.8,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 10,
+          "maxWindSpeedKmh": 19.7
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 19.6
+          "weatherCode": 3,
+          "maxTemperatureC": 19.6,
+          "minTemperatureC": 12.7,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 4,
+          "maxWindSpeedKmh": 12.1
         }
       ]
     },
@@ -195,15 +334,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 18.7
+          "weatherCode": 81,
+          "maxTemperatureC": 18.7,
+          "minTemperatureC": 14.2,
+          "precipitationMm": 17.9,
+          "precipitationProbabilityPercent": 100,
+          "maxWindSpeedKmh": 18.5
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 20.2
+          "weatherCode": 3,
+          "maxTemperatureC": 20.2,
+          "minTemperatureC": 13,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 16.6
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 20.5
+          "weatherCode": 3,
+          "maxTemperatureC": 20.5,
+          "minTemperatureC": 13.1,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 14.2
         }
       ]
     },
@@ -215,15 +369,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 18.5
+          "weatherCode": 81,
+          "maxTemperatureC": 18.5,
+          "minTemperatureC": 15.3,
+          "precipitationMm": 23.6,
+          "precipitationProbabilityPercent": 100,
+          "maxWindSpeedKmh": 8
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 21.7
+          "weatherCode": 45,
+          "maxTemperatureC": 21.7,
+          "minTemperatureC": 14.7,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 3,
+          "maxWindSpeedKmh": 13.6
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 19.9
+          "weatherCode": 3,
+          "maxTemperatureC": 19.9,
+          "minTemperatureC": 13.2,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 10,
+          "maxWindSpeedKmh": 9.4
         }
       ]
     },
@@ -235,15 +404,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 19.1
+          "weatherCode": 81,
+          "maxTemperatureC": 19.1,
+          "minTemperatureC": 14,
+          "precipitationMm": 9.9,
+          "precipitationProbabilityPercent": 100,
+          "maxWindSpeedKmh": 14.3
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 21.2
+          "weatherCode": 3,
+          "maxTemperatureC": 21.2,
+          "minTemperatureC": 11.7,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 15.2
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 21
+          "weatherCode": 3,
+          "maxTemperatureC": 21,
+          "minTemperatureC": 12.9,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 12.5
         }
       ]
     },
@@ -255,15 +439,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 29.2
+          "weatherCode": 3,
+          "maxTemperatureC": 29.2,
+          "minTemperatureC": 21.2,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 2,
+          "maxWindSpeedKmh": 11.9
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 31.1
+          "weatherCode": 51,
+          "maxTemperatureC": 31.1,
+          "minTemperatureC": 21.9,
+          "precipitationMm": 0.1,
+          "precipitationProbabilityPercent": 57,
+          "maxWindSpeedKmh": 12.5
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 23.6
+          "weatherCode": 51,
+          "maxTemperatureC": 23.6,
+          "minTemperatureC": 20.4,
+          "precipitationMm": 1.3,
+          "precipitationProbabilityPercent": 75,
+          "maxWindSpeedKmh": 13.2
         }
       ]
     },
@@ -275,15 +474,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 19.3
+          "weatherCode": 80,
+          "maxTemperatureC": 19.3,
+          "minTemperatureC": 17.2,
+          "precipitationMm": 12.1,
+          "precipitationProbabilityPercent": 100,
+          "maxWindSpeedKmh": 11.9
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 21.8
+          "weatherCode": 51,
+          "maxTemperatureC": 21.8,
+          "minTemperatureC": 14.7,
+          "precipitationMm": 0.2,
+          "precipitationProbabilityPercent": 51,
+          "maxWindSpeedKmh": 12.2
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 20.2
+          "weatherCode": 55,
+          "maxTemperatureC": 20.2,
+          "minTemperatureC": 16.1,
+          "precipitationMm": 4.8,
+          "precipitationProbabilityPercent": 67,
+          "maxWindSpeedKmh": 13.7
         }
       ]
     },
@@ -295,15 +509,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 20.3
+          "weatherCode": 81,
+          "maxTemperatureC": 20.3,
+          "minTemperatureC": 11.7,
+          "precipitationMm": 8.3,
+          "precipitationProbabilityPercent": 69,
+          "maxWindSpeedKmh": 13.4
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 18.1
+          "weatherCode": 3,
+          "maxTemperatureC": 18.1,
+          "minTemperatureC": 10,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 1,
+          "maxWindSpeedKmh": 13.6
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 15.6
+          "weatherCode": 0,
+          "maxTemperatureC": 15.6,
+          "minTemperatureC": 7.3,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 11.1
         }
       ]
     },
@@ -315,15 +544,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 15.1
+          "weatherCode": 81,
+          "maxTemperatureC": 15.1,
+          "minTemperatureC": 11.8,
+          "precipitationMm": 5.6,
+          "precipitationProbabilityPercent": 78,
+          "maxWindSpeedKmh": 21.4
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 21
+          "weatherCode": 3,
+          "maxTemperatureC": 21,
+          "minTemperatureC": 11.1,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 21.1
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 17.1
+          "weatherCode": 3,
+          "maxTemperatureC": 17.1,
+          "minTemperatureC": 7,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 9.3
         }
       ]
     },
@@ -335,15 +579,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 18.2
+          "weatherCode": 80,
+          "maxTemperatureC": 18.2,
+          "minTemperatureC": 13.9,
+          "precipitationMm": 6.8,
+          "precipitationProbabilityPercent": 100,
+          "maxWindSpeedKmh": 8.8
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 21.3
+          "weatherCode": 45,
+          "maxTemperatureC": 21.3,
+          "minTemperatureC": 11.2,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 20,
+          "maxWindSpeedKmh": 5.1
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 22.4
+          "weatherCode": 3,
+          "maxTemperatureC": 22.4,
+          "minTemperatureC": 15,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 23,
+          "maxWindSpeedKmh": 6.4
         }
       ]
     },
@@ -355,15 +614,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 18.6
+          "weatherCode": 81,
+          "maxTemperatureC": 18.6,
+          "minTemperatureC": 14.4,
+          "precipitationMm": 16.7,
+          "precipitationProbabilityPercent": 100,
+          "maxWindSpeedKmh": 11.3
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 21.3
+          "weatherCode": 61,
+          "maxTemperatureC": 21.3,
+          "minTemperatureC": 13.9,
+          "precipitationMm": 5.4,
+          "precipitationProbabilityPercent": 99,
+          "maxWindSpeedKmh": 13.4
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 18.3
+          "weatherCode": 81,
+          "maxTemperatureC": 18.3,
+          "minTemperatureC": 15.8,
+          "precipitationMm": 12.8,
+          "precipitationProbabilityPercent": 90,
+          "maxWindSpeedKmh": 6.5
         }
       ]
     },
@@ -375,15 +649,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 30.5
+          "weatherCode": 80,
+          "maxTemperatureC": 30.5,
+          "minTemperatureC": 23.5,
+          "precipitationMm": 3.1,
+          "precipitationProbabilityPercent": 94,
+          "maxWindSpeedKmh": 13.6
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 30.5
+          "weatherCode": 55,
+          "maxTemperatureC": 30.5,
+          "minTemperatureC": 23.6,
+          "precipitationMm": 4.7,
+          "precipitationProbabilityPercent": 82,
+          "maxWindSpeedKmh": 6.2
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 28.8
+          "weatherCode": 51,
+          "maxTemperatureC": 28.8,
+          "minTemperatureC": 21.7,
+          "precipitationMm": 3.2,
+          "precipitationProbabilityPercent": 80,
+          "maxWindSpeedKmh": 9.3
         }
       ]
     },
@@ -395,15 +684,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 29.2
+          "weatherCode": 53,
+          "maxTemperatureC": 29.2,
+          "minTemperatureC": 23.1,
+          "precipitationMm": 2.4,
+          "precipitationProbabilityPercent": 94,
+          "maxWindSpeedKmh": 13.2
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 29.5
+          "weatherCode": 80,
+          "maxTemperatureC": 29.5,
+          "minTemperatureC": 22.3,
+          "precipitationMm": 5.7,
+          "precipitationProbabilityPercent": 94,
+          "maxWindSpeedKmh": 12
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 27.2
+          "weatherCode": 95,
+          "maxTemperatureC": 27.2,
+          "minTemperatureC": 21.5,
+          "precipitationMm": 27.9,
+          "precipitationProbabilityPercent": 82,
+          "maxWindSpeedKmh": 15.9
         }
       ]
     },
@@ -415,15 +719,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 30.6
+          "weatherCode": 55,
+          "maxTemperatureC": 30.6,
+          "minTemperatureC": 24.1,
+          "precipitationMm": 3.4,
+          "precipitationProbabilityPercent": 96,
+          "maxWindSpeedKmh": 12.4
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 30.5
+          "weatherCode": 53,
+          "maxTemperatureC": 30.5,
+          "minTemperatureC": 24.3,
+          "precipitationMm": 1.4,
+          "precipitationProbabilityPercent": 100,
+          "maxWindSpeedKmh": 17
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 29.7
+          "weatherCode": 53,
+          "maxTemperatureC": 29.7,
+          "minTemperatureC": 24.1,
+          "precipitationMm": 2.1,
+          "precipitationProbabilityPercent": 84,
+          "maxWindSpeedKmh": 21.3
         }
       ]
     },
@@ -435,15 +754,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 19.6
+          "weatherCode": 51,
+          "maxTemperatureC": 19.6,
+          "minTemperatureC": 16,
+          "precipitationMm": 1.2,
+          "precipitationProbabilityPercent": 69,
+          "maxWindSpeedKmh": 5.9
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 19.6
+          "weatherCode": 51,
+          "maxTemperatureC": 19.6,
+          "minTemperatureC": 15.6,
+          "precipitationMm": 0.9,
+          "precipitationProbabilityPercent": 63,
+          "maxWindSpeedKmh": 6.6
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 21.1
+          "weatherCode": 51,
+          "maxTemperatureC": 21.1,
+          "minTemperatureC": 16.8,
+          "precipitationMm": 0.5,
+          "precipitationProbabilityPercent": 73,
+          "maxWindSpeedKmh": 7.3
         }
       ]
     },
@@ -455,15 +789,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 20.2
+          "weatherCode": 3,
+          "maxTemperatureC": 20.2,
+          "minTemperatureC": 12.4,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 6,
+          "maxWindSpeedKmh": 6.9
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 21.4
+          "weatherCode": 3,
+          "maxTemperatureC": 21.4,
+          "minTemperatureC": 12.9,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 29,
+          "maxWindSpeedKmh": 10
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 21.4
+          "weatherCode": 51,
+          "maxTemperatureC": 21.4,
+          "minTemperatureC": 13.5,
+          "precipitationMm": 0.1,
+          "precipitationProbabilityPercent": 31,
+          "maxWindSpeedKmh": 6.9
         }
       ]
     },
@@ -475,15 +824,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 16.1
+          "weatherCode": 61,
+          "maxTemperatureC": 16.1,
+          "minTemperatureC": 11.2,
+          "precipitationMm": 8.7,
+          "precipitationProbabilityPercent": 100,
+          "maxWindSpeedKmh": 15
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 15.3
+          "weatherCode": 61,
+          "maxTemperatureC": 15.3,
+          "minTemperatureC": 12,
+          "precipitationMm": 8.6,
+          "precipitationProbabilityPercent": 99,
+          "maxWindSpeedKmh": 13.2
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 16.3
+          "weatherCode": 61,
+          "maxTemperatureC": 16.3,
+          "minTemperatureC": 10.9,
+          "precipitationMm": 7.4,
+          "precipitationProbabilityPercent": 100,
+          "maxWindSpeedKmh": 11.4
         }
       ]
     },
@@ -495,15 +859,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 26
+          "weatherCode": 3,
+          "maxTemperatureC": 26,
+          "minTemperatureC": 14.3,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 16.5
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 26.4
+          "weatherCode": 51,
+          "maxTemperatureC": 26.4,
+          "minTemperatureC": 14.5,
+          "precipitationMm": 0.1,
+          "precipitationProbabilityPercent": 33,
+          "maxWindSpeedKmh": 13
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 25.3
+          "weatherCode": 80,
+          "maxTemperatureC": 25.3,
+          "minTemperatureC": 14.9,
+          "precipitationMm": 4.1,
+          "precipitationProbabilityPercent": 55,
+          "maxWindSpeedKmh": 13.9
         }
       ]
     },
@@ -515,15 +894,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 14.3
+          "weatherCode": 1,
+          "maxTemperatureC": 14.3,
+          "minTemperatureC": 1.5,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 10.9
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 14.7
+          "weatherCode": 1,
+          "maxTemperatureC": 14.7,
+          "minTemperatureC": 1.8,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 11.2
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 13.7
+          "weatherCode": 2,
+          "maxTemperatureC": 13.7,
+          "minTemperatureC": 2.6,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 13.2
         }
       ]
     },
@@ -535,15 +929,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 17.6
+          "weatherCode": 55,
+          "maxTemperatureC": 17.6,
+          "minTemperatureC": 8.8,
+          "precipitationMm": 4.5,
+          "precipitationProbabilityPercent": 100,
+          "maxWindSpeedKmh": 9.7
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 19.1
+          "weatherCode": 3,
+          "maxTemperatureC": 19.1,
+          "minTemperatureC": 7.2,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 8,
+          "maxWindSpeedKmh": 10.1
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 18.3
+          "weatherCode": 3,
+          "maxTemperatureC": 18.3,
+          "minTemperatureC": 6.9,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 13
         }
       ]
     },
@@ -555,15 +964,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 14.9
+          "weatherCode": 3,
+          "maxTemperatureC": 14.9,
+          "minTemperatureC": 2.6,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 42,
+          "maxWindSpeedKmh": 13.3
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 13.9
+          "weatherCode": 3,
+          "maxTemperatureC": 13.9,
+          "minTemperatureC": 1.8,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 4.5
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 16.4
+          "weatherCode": 2,
+          "maxTemperatureC": 16.4,
+          "minTemperatureC": 2.2,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 2,
+          "maxWindSpeedKmh": 3.5
         }
       ]
     },
@@ -575,15 +999,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 12.6
+          "weatherCode": 1,
+          "maxTemperatureC": 12.6,
+          "minTemperatureC": -1.7,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 1,
+          "maxWindSpeedKmh": 22.5
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 13.2
+          "weatherCode": 2,
+          "maxTemperatureC": 13.2,
+          "minTemperatureC": -2.8,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 17.9
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 15
+          "weatherCode": 0,
+          "maxTemperatureC": 15,
+          "minTemperatureC": -2.2,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 11.6
         }
       ]
     },
@@ -595,15 +1034,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 15.5
+          "weatherCode": 2,
+          "maxTemperatureC": 15.5,
+          "minTemperatureC": 2.7,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 15.9
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 15.2
+          "weatherCode": 0,
+          "maxTemperatureC": 15.2,
+          "minTemperatureC": 1.1,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 13.1
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 14.5
+          "weatherCode": 0,
+          "maxTemperatureC": 14.5,
+          "minTemperatureC": 0.1,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 13.1
         }
       ]
     },
@@ -615,15 +1069,30 @@
       "forecast": [
         {
           "date": "2026-11-04",
-          "maxTemperatureC": 11
+          "weatherCode": 3,
+          "maxTemperatureC": 11,
+          "minTemperatureC": -0.5,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 12.1
         },
         {
           "date": "2026-11-05",
-          "maxTemperatureC": 8.6
+          "weatherCode": 3,
+          "maxTemperatureC": 8.6,
+          "minTemperatureC": 0.4,
+          "precipitationMm": 0,
+          "precipitationProbabilityPercent": 0,
+          "maxWindSpeedKmh": 12.8
         },
         {
           "date": "2026-11-06",
-          "maxTemperatureC": 6.7
+          "weatherCode": 51,
+          "maxTemperatureC": 6.7,
+          "minTemperatureC": 1.4,
+          "precipitationMm": 0.6,
+          "precipitationProbabilityPercent": 35,
+          "maxWindSpeedKmh": 7.6
         }
       ]
     }
