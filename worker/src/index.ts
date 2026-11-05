@@ -449,7 +449,9 @@ export default {
 				await enforceRateLimit(ip, env);
 				let body: unknown;
 				try { body = await request.json(); } catch { throw new HttpError(422, 'Request body must be valid JSON'); }
-				return runAgentTurn(parseAgentTurnRequest(body), cors, url.searchParams.get('format') === 'json');
+				// Await inside this try/catch so provider rejections are converted into
+				// CORS-enabled JSON errors instead of escaping as Cloudflare error 1101.
+				return await runAgentTurn(parseAgentTurnRequest(body), cors, url.searchParams.get('format') === 'json');
 			}
 			return errorResponse(new HttpError(404, 'Not found'), cors);
 		} catch (error) {
