@@ -81,7 +81,7 @@ interface MapStore {
 
 // ─── 默认底图配置 ──────────────────────────────────────────────
 
-const DEFAULT_BASEMAP = BUILTIN_BASEMAPS.find((b) => b.id === 'carto-voyager-nolabels')!
+const DEFAULT_BASEMAP = BUILTIN_BASEMAPS.find((b) => b.id === 'carto-dark')!
 
 // ─── Store 实现 ─────────────────────────────────────────────────
 

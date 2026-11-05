@@ -83,15 +83,7 @@ export function MapView({
     const store = useMapStore.getState()
     const currentBasemap = store.basemap
 
-    if (currentBasemap.type === 'raster-tiles') {
-      // Raster 底图：切换到 vector 底图变体
-      const targetId = showLabels ? 'carto-voyager' : 'carto-voyager-nolabels'
-      const target = BUILTIN_BASEMAPS.find((b) => b.id === targetId)
-      if (target && target.id !== currentBasemap.id) {
-        store.setBasemap(target)
-      }
-      return
-    }
+    if (currentBasemap.type === 'raster-tiles') return
 
     // Vector 底图：尝试 -nolabels 变体
     const currentId = currentBasemap.id
@@ -297,6 +289,13 @@ export function MapView({
     })
     return () => cancelAnimationFrame(raf)
   }, [isFullscreen])
+
+  useEffect(() => {
+    if (!mapContainer.current) return
+    const observer = new ResizeObserver(() => mapEngine.getMap()?.resize())
+    observer.observe(mapContainer.current)
+    return () => observer.disconnect()
+  }, [])
 
   // ─── Sync layer changes ───────────────────────────────────────
 

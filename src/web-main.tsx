@@ -8,11 +8,11 @@ import { useSettingsStore } from './stores/settingsStore'
 
 useSettingsStore.getState().updateAppearance({
   language: 'zh',
-  basemapId: 'carto-voyager',
+  basemapId: 'carto-dark',
   showMapLabels: true,
 })
-const labeledBasemap = BUILTIN_BASEMAPS.find((source) => source.id === 'carto-voyager')
-if (labeledBasemap) useMapStore.getState().setBasemap(labeledBasemap)
+const webBasemap = BUILTIN_BASEMAPS.find((source) => source.id === 'carto-dark')
+if (webBasemap) useMapStore.getState().setBasemap(webBasemap)
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -425,6 +425,13 @@ export interface BasemapSource {
 
 export const BUILTIN_BASEMAPS: BasemapSource[] = [
   {
+    id: 'carto-dark-raster',
+    name: 'CARTO Dark Raster',
+    type: 'raster-tiles',
+    url: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+    attribution: '© OpenStreetMap contributors © CARTO',
+  },
+  {
     id: 'osm-streets',
     name: 'OpenStreetMap Streets',
     type: 'raster-tiles',
