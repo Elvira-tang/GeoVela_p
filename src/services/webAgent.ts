@@ -152,9 +152,11 @@ export async function runWebAgentLoop(
     const calls: AgentToolCall[] = []
     let state: ProviderMessage | undefined
     let finalText: string | undefined
-    const reader = response.body?.getReader()
-    const decoder = new TextDecoder()
-    let buffer = reader ? '' : await response.text()
+    // The Worker assembles the complete SSE payload before returning it. Reading
+    // it as a live stream makes some Chromium/network combinations surface a
+    // clean connection close as `TypeError: Failed to fetch`, even though the
+    // provider request succeeded. Consume the finite payload atomically instead.
+    let buffer = await response.text()
     const consume = (block: string) => {
       const event = parseSseBlock(block)
       if (!event) return
@@ -163,14 +165,9 @@ export async function runWebAgentLoop(
       if (event.event === 'assistant_message') finalText = String(event.data.text ?? '')
       if (event.event === 'turn_state') state = event.data.message as ProviderMessage
     }
-    if (reader) {
-      while (true) {
-        const { done, value } = await reader.read()
-        buffer += decoder.decode(value, { stream: !done })
-        const blocks = buffer.split(/\r?\n\r?\n/); buffer = blocks.pop() ?? ''; blocks.forEach(consume)
-        if (done) break
-      }
-    }
+    const blocks = buffer.split(/\r?\n\r?\n/)
+    buffer = blocks.pop() ?? ''
+    blocks.forEach(consume)
     if (buffer.trim()) consume(buffer)
     if (!runId || !state) throw new Error('Agent Server 未返回有效 turn_state')
     messages.push(state)
