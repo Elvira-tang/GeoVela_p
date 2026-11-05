@@ -3,7 +3,7 @@ main = "src/index.ts"
 compatibility_date = "2026-01-01"
 
 [vars]
-GEOVELA_ALLOWED_ORIGINS = "https://elvira-tang.github.io,http://127.0.0.1:5173,http://127.0.0.1:5174"
+GEOVELA_ALLOWED_ORIGINS = "https://elvira-tang.github.io,https://geovela-web.pages.dev,http://127.0.0.1:5173,http://127.0.0.1:5174"
 GEOVELA_RATE_LIMIT_PER_MINUTE = "20"
 
 # Cloudflare 原生限流绑定：每个 IP 每 60 秒最多 20 次请求

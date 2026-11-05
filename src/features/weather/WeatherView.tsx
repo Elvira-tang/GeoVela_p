@@ -3,8 +3,11 @@ import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { Bot, CheckCircle2, Loader2, Send, Settings2, Sparkles, Square, Unplug, Wrench, X } from 'lucide-react'
 import { useMapStore } from '@/stores/mapStore'
-import { resolveWeatherAgentPlan, testWebAgentConnection, type WebAgentConfig } from '@/services/webAgent'
+import { resolveWeatherAgentPlan, runWebAgentLoop, testWebAgentConnection, type AgentToolCall, type AgentToolResult, type WebAgentConfig } from '@/services/webAgent'
 import { executeToolEvents, type AgentToolEvent, type WeatherMetric } from '@/services/toolEventRouter'
+import { fetchFiveDayWeather } from '@/services/weatherApi'
+import { useApprovalStore } from '@/stores/approvalStore'
+import { webControlPlane } from '@/services/webControlPlane'
 
 interface ForecastDay {
   date: string
@@ -15,8 +18,8 @@ interface ForecastDay {
   precipitationProbabilityPercent: number
   maxWindSpeedKmh: number
 }
-interface CityWeather { name: string; region: string; latitude: number; longitude: number; forecast: ForecastDay[] }
-interface WeatherSample { generatedAt: string; timezone: string; cities: CityWeather[] }
+interface CityWeather { name: string; region: string; latitude: number; longitude: number; forecast: ForecastDay[]; recent?: ForecastDay[] }
+interface WeatherSample { generatedAt: string; timezone: string; cities: CityWeather[]; live?: boolean }
 interface ModelPredictionDay { date: string; horizonDays: number; openMeteoMaxC: number; modelMaxC: number; correctionC: number }
 interface ModelCity {
   name: string
@@ -88,7 +91,7 @@ function TemperatureChart({ city }: { city: CityWeather }) {
   const low = Math.floor(Math.min(...values) - 2)
   const high = Math.ceil(Math.max(...values) + 2)
   const y = (value: number) => 116 - ((value - low) / (high - low || 1)) * 84
-  const x = (index: number) => 48 + index * 108
+  const x = (index: number) => 48 + index * (240 / Math.max(1, city.forecast.length - 1))
   const line = (key: 'maxTemperatureC' | 'minTemperatureC') => city.forecast.map((day, index) => `${x(index)},${y(day[key])}`).join(' ')
   return <section className="rounded-lg border border-border bg-bg-secondary p-3">
     <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">温度趋势</h3><div className="flex gap-3 text-[10px] text-text-muted"><span className="text-orange-600">● 最高</span><span className="text-blue-500">● 最低</span></div></div>
@@ -172,7 +175,7 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
   const [runningTools, setRunningTools] = useState<string[]>([])
   const [showSettings, setShowSettings] = useState(false)
   const [config, setConfig] = useState<WebAgentConfig | null>(null)
-  const [draft, setDraft] = useState<WebAgentConfig>({ transport: 'direct', proxyUrl: '', endpoint: 'https://api.openai.com/v1', model: '', apiKey: '' })
+  const [draft, setDraft] = useState<WebAgentConfig>({ transport: 'proxy', proxyUrl: 'https://geovela-agent.2273764807.workers.dev', endpoint: 'https://api.openai.com/v1', model: '', apiKey: '' })
   const [connectionState, setConnectionState] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
   const [connectionError, setConnectionError] = useState('')
   const [messages, setMessages] = useState<AgentMessage[]>([{ id: 1, role: 'assistant', text: '你好，我是 GeoVela Agent。我可以查询全国天气、定位城市、展示预测并绘制温度趋势图。' }])
@@ -182,6 +185,7 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }) }, [messages, running])
   useEffect(() => () => runController.current?.abort(), [])
+  useEffect(() => { const open = () => setShowSettings(true); window.addEventListener('geovela:open-api-settings', open); return () => window.removeEventListener('geovela:open-api-settings', open) }, [])
 
   const run = async (raw: string) => {
     const text = raw.trim()
@@ -192,6 +196,7 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
     setRunStage('正在分析请求…')
     setRunningTools([])
     const controller = new AbortController()
+    const runStartedAt = Date.now()
     runController.current = controller
     const timeout = window.setTimeout(() => controller.abort('timeout'), 25_000)
     await new Promise((resolve) => window.setTimeout(resolve, 420))
@@ -199,6 +204,92 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
     let serverEvents: unknown[] | undefined
     let runId: string | undefined
     const runEvents: NonNullable<AgentMessage['run']>['events'] = []
+    if (config?.transport === 'proxy') {
+      let renderedChartCity: string | undefined
+      let renderedModelChart = false
+      try {
+        const completed = await runWebAgentLoop(config, text, async (calls: AgentToolCall[]): Promise<AgentToolResult[]> => Promise.all(calls.map(async (call) => {
+          const args = call.arguments
+          const cityName = typeof args.city === 'string' ? args.city.replace(/市$/, '') : undefined
+          const city = cityName ? sample.cities.find((item) => item.name === cityName) : undefined
+          let result: Record<string, unknown>
+          switch (call.tool) {
+            case 'weather.get_recent':
+            case 'weather.get_forecast': {
+              const days = Math.min(5, Math.max(1, Number(args.days) || 3))
+              const cities = city ? [city] : sample.cities
+              const field = call.tool === 'weather.get_recent' ? 'recent' : 'forecast'
+              result = { ok: true, source: sample.live ? 'Open-Meteo live' : 'Open-Meteo fallback sample', generated_at: sample.generatedAt, cities: cities.map((item) => ({ name: item.name, region: item.region, latitude: item.latitude, longitude: item.longitude, [field]: (field === 'recent' ? item.recent ?? item.forecast : item.forecast).slice(0, days) })) }
+              break
+            }
+            case 'poi.search_milk_tea': {
+              const approval = await useApprovalStore.getState().request({ kind: 'confirm', title: '允许联网搜索 POI？', message: '将向 OpenStreetMap Overpass 查询当前地图范围内的奶茶店，并把结果添加到地图。', toolName: call.tool, runId, danger: false })
+              if (!approval.approved) { result = { ok: false, denied: true, reason: '用户拒绝联网 POI 查询' }; break }
+              const bounds = map.current?.getBounds()
+              if (!bounds) throw new Error('地图尚未就绪')
+              const bbox = [bounds.getSouth(), bounds.getWest(), bounds.getNorth(), bounds.getEast()].join(',')
+              const response = await fetch(`${config.proxyUrl.trim().replace(/\/$/, '')}/v1/poi/milk-tea?bbox=${encodeURIComponent(bbox)}`, { signal: controller.signal })
+              if (!response.ok) throw new Error(`POI 服务 HTTP ${response.status}`)
+              const geojson = await response.json() as maplibregl.GeoJSONSourceSpecification['data'] & { features?: unknown[] }
+              const id = 'agent-milk-tea-poi'
+              if (map.current?.getLayer(id)) map.current.removeLayer(id)
+              if (map.current?.getSource(id)) map.current.removeSource(id)
+              map.current?.addSource(id, { type: 'geojson', data: geojson })
+              map.current?.addLayer({ id, source: id, type: 'circle', paint: { 'circle-radius': 6, 'circle-color': '#db2777', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } })
+              result = { ok: true, feature_count: geojson.features?.length ?? 0, layer_id: id, source: 'OpenStreetMap' }
+              break
+            }
+            case 'map.fly_to': {
+              const center = Array.isArray(args.center) && args.center.length === 2 ? args.center as [number, number] : city ? [city.longitude, city.latitude] as [number, number] : undefined
+              if (!center) throw new Error(`无法解析地图位置：${cityName ?? '缺少坐标'}`)
+              map.current?.flyTo({ center, zoom: Number(args.zoom) || 7, duration: 900 })
+              if (city) onSelectCity(city.name)
+              result = { ok: true, center, zoom: Number(args.zoom) || 7 }
+              break
+            }
+            case 'map.add_geojson_layer': {
+              const id = `agent-${String(args.id ?? Date.now()).replace(/[^a-zA-Z0-9_-]/g, '-')}`
+              const geojson = args.geojson as { type?: string; features?: unknown[] }
+              if (!map.current || !geojson || geojson.type !== 'FeatureCollection') throw new Error('无效的 GeoJSON 图层')
+              if (map.current.getLayer(id)) map.current.removeLayer(id)
+              if (map.current.getSource(id)) map.current.removeSource(id)
+              map.current.addSource(id, { type: 'geojson', data: geojson as maplibregl.GeoJSONSourceSpecification['data'] })
+              map.current.addLayer({ id, source: id, type: 'circle', paint: { 'circle-radius': 7, 'circle-color': '#7c3aed', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } })
+              result = { ok: true, layer_id: id, feature_count: geojson.features?.length ?? 0 }
+              break
+            }
+            case 'chart.render': {
+              const match = sample.cities.find((item) => String(args.title ?? '').includes(item.name)) ?? city
+              renderedChartCity = match?.name
+              renderedModelChart = String(args.title ?? '').includes('模型')
+              result = { ok: true, chart: args.chart, row_count: Array.isArray(args.rows) ? args.rows.length : 0 }
+              break
+            }
+            case 'table.show':
+              result = { ok: true, row_count: Array.isArray(args.rows) ? args.rows.length : 0 }
+              break
+            default:
+              throw new Error(`不支持的工具：${call.tool}`)
+          }
+          return { type: 'tool_result', id: call.id, tool: call.tool, result }
+        })), controller.signal, ({ event, data, runId: eventRunId, sequence, emittedAt, durationMs }) => {
+          const tool = typeof data.tool === 'string' ? data.tool : ''
+          runId = eventRunId
+          if (event !== 'turn_state') runEvents.push({ sequence, event, tool: tool || undefined, emittedAt, durationMs })
+          if (event === 'tool_call') { setRunStage(`正在调用 ${tool}…`); setRunningTools((items) => items.includes(tool) ? items : [...items, tool]) }
+          if (event === 'tool_result') setRunStage(`已完成 ${tool}，模型正在继续推理…`)
+        })
+        setMessages((items) => [...items, { id: nextId.current++, role: 'assistant', text: completed.text, tools: [...new Set(runEvents.map((item) => item.tool).filter((item): item is string => Boolean(item)))], chartCity: renderedChartCity, modelChart: renderedModelChart, run: { id: completed.runId, events: [...runEvents] } }])
+        webControlPlane.recordRun({ id: completed.runId, prompt: text, model: config.model, status: 'success', startedAt: new Date(runStartedAt).toISOString(), durationMs: Date.now() - runStartedAt, tools: [...new Set(runEvents.map((item) => item.tool).filter((item): item is string => Boolean(item)))], events: runEvents.length, answer: completed.text })
+      } catch (cause) {
+        const errorText = controller.signal.aborted ? '本次 Agent 请求已取消或超时。' : `Agent Loop 执行失败：${cause instanceof Error ? cause.message : '未知错误'}`
+        setMessages((items) => [...items, { id: nextId.current++, role: 'assistant', text: errorText }])
+        webControlPlane.recordRun({ id: runId ?? crypto.randomUUID(), prompt: text, model: config.model, status: controller.signal.aborted ? 'cancelled' : 'error', startedAt: new Date(runStartedAt).toISOString(), durationMs: Date.now() - runStartedAt, tools: [...new Set(runEvents.map((item) => item.tool).filter((item): item is string => Boolean(item)))], events: runEvents.length, error: errorText })
+      } finally {
+        window.clearTimeout(timeout); runController.current = null; setRunning(false); setRunStage(''); setRunningTools([])
+      }
+      return
+    }
     if (config) {
       try {
         const plan = await resolveWeatherAgentPlan(config, text, controller.signal, ({ event, data, runId: eventRunId, sequence, emittedAt, durationMs }) => {
@@ -288,6 +379,15 @@ function AgentPanel({ sample, model, onSelectCity, onSetMetric, map }: {
     setRunningTools([])
   }
 
+  useEffect(() => {
+    const handleWorkflow = (event: Event) => {
+      const prompt = (event as CustomEvent<{ prompt?: string }>).detail?.prompt
+      if (prompt) void run(prompt)
+    }
+    window.addEventListener('geovela:run-workflow', handleWorkflow)
+    return () => window.removeEventListener('geovela:run-workflow', handleWorkflow)
+  })
+
   const submit = (event: FormEvent) => { event.preventDefault(); void run(input) }
   const connect = async () => {
     if (!draft.endpoint.trim() || !draft.model.trim()) return
@@ -339,9 +439,11 @@ export function WeatherView() {
     const controller = new AbortController()
     fetch(`${import.meta.env.BASE_URL}data/weather/forecast-sample.json`, { signal: controller.signal })
       .then((response) => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json() as Promise<WeatherSample> })
-      .then((data) => {
+      .then(async (fallback) => {
+        let data = fallback
+        try { data = await fetchFiveDayWeather(fallback.cities.map(({ name, region, latitude, longitude }) => ({ name, region, latitude, longitude })), controller.signal) as WeatherSample } catch { data = fallback }
         const keys: MetricKey[] = ['maxTemperatureC', 'precipitationMm', 'precipitationProbabilityPercent', 'maxWindSpeedKmh']
-        if (!Array.isArray(data.cities) || data.cities.length === 0 || data.cities.some((city) => city.forecast.length !== 3 || city.forecast.some((day) => keys.some((key) => !Number.isFinite(day[key])) || !Number.isFinite(day.minTemperatureC)))) throw new Error('天气样本格式不正确')
+        if (!Array.isArray(data.cities) || data.cities.length === 0 || data.cities.some((city) => city.forecast.length < 3 || city.forecast.some((day) => keys.some((key) => !Number.isFinite(day[key])) || !Number.isFinite(day.minTemperatureC)))) throw new Error('天气数据格式不正确')
         setSample(data)
       })
       .catch((cause: unknown) => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : '加载失败') })
@@ -400,7 +502,7 @@ export function WeatherView() {
         {selectedCity && selectedDay && <><div className="mt-3 rounded-lg border border-border bg-bg-secondary p-3"><div className="flex items-baseline justify-between"><h3 className="font-semibold">{selectedCity.name}</h3><span className="text-sm">{weatherDescription(selectedDay.weatherCode)}</span></div><div className="mt-2 grid grid-cols-4 gap-2 text-center">
           <div><div className="text-base font-semibold">{selectedDay.maxTemperatureC}°</div><div className="text-[10px] text-text-muted">最高</div></div><div><div className="text-base font-semibold">{selectedDay.precipitationMm}</div><div className="text-[10px] text-text-muted">降雨 mm</div></div><div><div className="text-base font-semibold">{selectedDay.precipitationProbabilityPercent}%</div><div className="text-[10px] text-text-muted">降雨概率</div></div><div><div className="text-base font-semibold">{selectedDay.maxWindSpeedKmh}</div><div className="text-[10px] text-text-muted">风速 km/h</div></div>
         </div></div><div className="mt-3 space-y-3">{selectedModelCity && <ModelComparisonChart city={selectedModelCity} />}<TemperatureChart city={selectedCity} /><RainBarChart city={selectedCity} /><RainShareChart city={selectedCity} /></div></>}
-        <p className="mt-4 text-xs text-text-muted">点击地图城市查看图表。样本生成：{new Date(sample.generatedAt).toLocaleString('zh-CN', { timeZone: sample.timezone })}，不会自动更新。</p><p className="mt-2 text-xs text-text-muted">数据：<a href="https://open-meteo.com/" target="_blank" rel="noreferrer" className="underline">Open-Meteo</a>（CC BY 4.0）。城市点位不代表全国连续天气分布。</p>
+        <p className="mt-4 text-xs text-text-muted">点击地图城市查看图表。{sample.live ? '实时获取' : '离线样本生成'}：{new Date(sample.generatedAt).toLocaleString('zh-CN', { timeZone: sample.timezone })}。</p><p className="mt-2 text-xs text-text-muted">数据：<a href="https://open-meteo.com/" target="_blank" rel="noreferrer" className="underline">Open-Meteo</a>（CC BY 4.0）。城市点位不代表全国连续天气分布。</p>
       </>}
     </aside>
   </div>

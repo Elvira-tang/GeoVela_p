@@ -11,6 +11,7 @@
     "dev:electron": "electron-vite dev",
     "build": "electron-vite build",
     "build:web": "vite build --mode web --base=/GeoVela/ && node -e \"require('node:fs').renameSync('dist/web.html','dist/index.html')\"",
+    "build:pages": "vite build --mode web --base=/ && node -e \"require('node:fs').renameSync('dist/web.html','dist/index.html')\"",
     "preview": "electron-vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
@@ -71,6 +72,7 @@
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.8.1",
     "vite": "^5.4.8",
-    "vitest": "^2.1.2"
+    "vitest": "^2.1.2",
+    "wrangler": "^4.157.0"
   }
 }

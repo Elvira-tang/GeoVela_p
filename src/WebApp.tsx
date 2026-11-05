@@ -1,104 +1,45 @@
-import { useState } from 'react'
-import { CloudSun, LayoutTemplate, Map as MapIcon, Table } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Bot, FileUp, FolderOpen, GitBranch, History, KeyRound, Layers3, Map as MapIcon, PlugZap, Server, Settings2, Sparkles, Table } from 'lucide-react'
 import { DataTable } from '@/features/data/DataTable'
 import { LayerPanel } from '@/features/layers/LayerPanel'
-import { LayoutComposerView } from '@/features/layout-composer/LayoutComposerView'
-import { captureCurrentMapSnapshot, captureMapSnapshotAfterIdle } from '@/features/layout-composer/mapSnapshot'
 import { MapView } from '@/features/map/MapView'
-import { WeatherView } from '@/features/weather/WeatherView'
-import { useMapStore } from '@/stores/mapStore'
-import { useSettingsStore } from '@/stores/settingsStore'
-import { useLayoutComposerStore } from '@/features/layout-composer/layoutComposerStore'
+import { GeoAgentWorkspace } from '@/features/web-agent/GeoAgentWorkspace'
+import { WebControlCenter } from '@/features/web-control/WebControlCenter'
+import { ApiSettingsPage, McpPage, PluginsPage, SkillsPage } from '@/features/web-control/ManagementPages'
+import { ApprovalGate } from '@/features/approval/ApprovalGate'
 
-type WebView = 'map' | 'table' | 'layout' | 'weather'
+type WebView = 'agent' | 'map' | 'table' | 'plugins' | 'mcp' | 'api' | 'workflows' | 'skills' | 'runs'
+const PRIMARY = [{ id: 'agent' as const, label: 'Geo Agent', icon: Bot }, { id: 'map' as const, label: '地图与图层', icon: MapIcon }, { id: 'table' as const, label: '数据表', icon: Table }]
 
-const VIEWS: Array<{ id: WebView; label: string; icon: typeof MapIcon }> = [
-  { id: 'map', label: '地图与图层样式', icon: MapIcon },
-  { id: 'table', label: '属性表', icon: Table },
-  { id: 'layout', label: '制图画布', icon: LayoutTemplate },
-  { id: 'weather', label: '全国天气', icon: CloudSun },
-]
-
-/** Browser edition: local GIS editing without Electron or the Python sidecar. */
 export default function WebApp() {
-  const [activeView, setActiveView] = useState<WebView>('weather')
-  const showMapLabels = useSettingsStore((state) => state.appearance.showMapLabels)
-  const updateAppearance = useSettingsStore((state) => state.updateAppearance)
-  const basemap = useMapStore((state) => state.basemap)
-  const setMapSnapshotUrl = useLayoutComposerStore((state) => state.setMapSnapshotUrl)
-
-  const switchView = (next: WebView) => {
-    if (next === 'layout') {
-      const snapshot = captureCurrentMapSnapshot()
-      if (snapshot) setMapSnapshotUrl(snapshot)
-      void captureMapSnapshotAfterIdle().then((settledSnapshot) => {
-        if (settledSnapshot) setMapSnapshotUrl(settledSnapshot)
-      })
-    }
-    setActiveView(next)
-  }
-
-  return (
-    <div className="flex h-screen min-h-0 flex-col bg-bg-primary text-text-primary">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border bg-bg-secondary px-4 py-2">
-        <div className="flex items-baseline gap-3">
-          <h1 className="font-display text-lg font-semibold">GeoVela</h1>
-          <span className="text-xs text-text-muted">Agent 驱动的在线 GIS</span>
-        </div>
-        <nav aria-label="网页功能" className="flex flex-wrap items-center gap-1">
-          {VIEWS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => switchView(id)}
-              aria-current={activeView === id ? 'page' : undefined}
-              className={`flex items-center gap-1.5 rounded px-2.5 py-1.5 text-xs transition-colors ${activeView === id ? 'bg-accent-primary text-white' : 'text-text-secondary hover:bg-bg-hover'}`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </button>
-          ))}
-        </nav>
-        {activeView === 'map' && (
-          <label className="flex items-center gap-2 text-xs text-text-secondary">
-            <input
-              type="checkbox"
-              checked={showMapLabels}
-              onChange={(event) => updateAppearance({ showMapLabels: event.target.checked })}
-            />
-            显示底图地名
-          </label>
-        )}
-      </header>
-      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        {activeView === 'map' && (
-          <aside className="h-40 shrink-0 border-b border-border md:h-auto md:w-72 md:border-b-0 md:border-r">
-            <LayerPanel />
-          </aside>
-        )}
-        <main className="relative min-h-0 min-w-0 flex-1">
-          <div
-            className={`absolute inset-0 ${activeView === 'map' ? '' : 'pointer-events-none opacity-0'}`}
-            aria-hidden={activeView !== 'map'}
-            ref={(element) => { if (element) element.inert = activeView !== 'map' }}
-          >
-            <MapView />
-          </div>
-          {activeView === 'table' && <div className="absolute inset-0 z-10 bg-bg-primary"><DataTable /></div>}
-          {activeView === 'layout' && <div className="absolute inset-0 z-10 bg-bg-primary"><LayoutComposerView /></div>}
-          {activeView === 'weather' && <div className="absolute inset-0 z-10 bg-bg-primary"><WeatherView /></div>}
-        </main>
+  const [activeView, setActiveView] = useState<WebView>('agent')
+  useEffect(() => { const open = () => setActiveView('agent'); window.addEventListener('geovela:run-workflow', open); return () => window.removeEventListener('geovela:run-workflow', open) }, [])
+  useEffect(() => { const navigate = (event: Event) => setActiveView((event as CustomEvent<WebView>).detail); window.addEventListener('geovela:navigate', navigate); return () => window.removeEventListener('geovela:navigate', navigate) }, [])
+  const openPicker = (eventName: string) => { setActiveView('agent'); window.setTimeout(() => window.dispatchEvent(new CustomEvent(eventName)), 50) }
+  return <div className="flex h-screen min-h-0 bg-[#f5f5f2] text-text-primary">
+    <aside className="z-30 flex w-[52px] shrink-0 flex-col border-r border-white/10 bg-[#202328] text-[#9ba0a7]">
+      <div className="grid h-12 place-items-center border-b border-white/10 text-cyan-300" title="GeoVela"><Sparkles className="h-5 w-5" /></div>
+      <nav className="space-y-1 p-1.5">{PRIMARY.map(({ id, label, icon }) => <NavButton key={id} open={false} active={activeView === id} icon={icon} label={label} onClick={() => setActiveView(id)} />)}</nav>
+      <div className="mx-2 border-t border-white/10" />
+      <div className="min-h-0 flex-1 overflow-y-auto p-1.5">
+        <NavButton open={false} icon={FolderOpen} label="选择文件夹" onClick={() => openPicker('geovela:choose-folder')} />
+        <NavButton open={false} icon={FileUp} label="导入 GIS 数据" onClick={() => openPicker('geovela:import-files')} />
+        <NavButton open={false} active={activeView === 'plugins'} icon={PlugZap} label="插件" onClick={() => setActiveView('plugins')} />
+        <NavButton open={false} active={activeView === 'mcp'} icon={Server} label="MCP Servers" onClick={() => setActiveView('mcp')} />
+        <NavButton open={false} active={activeView === 'api'} icon={KeyRound} label="模型 API" onClick={() => setActiveView('api')} />
+        <NavButton open={false} active={activeView === 'workflows'} icon={GitBranch} label="Workflows" onClick={() => setActiveView('workflows')} />
+        <NavButton open={false} active={activeView === 'skills'} icon={Layers3} label="Skills" onClick={() => setActiveView('skills')} />
+        <NavButton open={false} active={activeView === 'runs'} icon={History} label="运行记录" onClick={() => setActiveView('runs')} />
       </div>
-      <footer className="shrink-0 border-t border-border bg-bg-secondary px-4 py-1 text-[11px] text-text-muted">
-        {activeView === 'map'
-          ? '添加地图文件后，展开左侧图层可调整样式；地图工具栏可导出 PNG 或 JPG。'
-          : activeView === 'table'
-            ? '属性表可搜索、排序并导出 CSV。'
-            : activeView === 'layout'
-              ? '制图画布可添加图例、比例尺、文字等元素并导出 PNG。'
-              : 'GeoVela Agent 可通过对话定位城市、查询三天天气并生成图表 · 数据：Open-Meteo。'}
-        {activeView !== 'weather' && <span className="ml-2">刷新页面会清除本次导入的图层。</span>}
-        <span className="ml-3">{basemap.attribution}{basemap.attribution?.includes('OpenStreetMap') ? '' : ' · © OpenStreetMap contributors'}</span>
-      </footer>
-    </div>
-  )
+      <div className="border-t border-white/10 p-1.5"><NavButton open={false} icon={Settings2} label="Agent 设置" onClick={() => setActiveView('api')} /></div>
+    </aside>
+    <main className="relative min-h-0 min-w-0 flex-1 bg-white">
+      <div className={`absolute inset-0 ${activeView === 'agent' ? '' : 'pointer-events-none invisible'}`}><GeoAgentWorkspace /></div>
+      {activeView === 'map' && <div className="absolute inset-0 flex"><aside className="w-[280px] shrink-0 border-r border-border bg-bg-primary"><LayerPanel /></aside><div className="relative min-w-0 flex-1"><MapView /></div></div>}
+      {activeView === 'table' && <div className="absolute inset-0"><DataTable /></div>}
+      {activeView === 'plugins' && <PluginsPage />}{activeView === 'mcp' && <McpPage />}{activeView === 'api' && <ApiSettingsPage />}{activeView === 'workflows' && <WebControlCenter only="workflows" />}{activeView === 'skills' && <SkillsPage />}{activeView === 'runs' && <WebControlCenter only="runs" />}
+    </main><ApprovalGate />
+  </div>
 }
+
+function NavButton({ open, active = false, icon: Icon, label, onClick }: { open: boolean; active?: boolean; icon: typeof Bot; label: string; onClick: () => void }) { return <button onClick={onClick} title={label} className={`flex w-full items-center justify-center rounded px-2 py-2.5 text-xs hover:bg-white/10 hover:text-white ${active ? 'border-l-2 border-cyan-400 bg-white/10 text-white' : 'text-[#9ba0a7]'}`}><Icon className="h-[18px] w-[18px] shrink-0" />{open && <span className="truncate">{label}</span>}</button> }

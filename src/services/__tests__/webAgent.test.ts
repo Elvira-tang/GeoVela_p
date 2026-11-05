@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolveWeatherAgentPlan, resolveWeatherIntent } from '../webAgent'
+import { resolveWeatherAgentPlan, resolveWeatherIntent, runWebAgentLoop } from '../webAgent'
 
 describe('web weather agent provider', () => {
   it('normalizes an OpenAI-compatible response', async () => {
@@ -54,6 +54,28 @@ describe('web weather agent provider', () => {
         runId: 'run-1',
       })
       expect(observed).toEqual(['tool_call:ai.route_intent', 'tool_result:ai.route_intent', 'tool_call:weather.select_city', 'tool_call:map.fly_to', 'assistant_message:'])
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
+  it('returns tool results to the proxy and continues until a final answer', async () => {
+    const originalFetch = globalThis.fetch
+    const requests: Array<Record<string, unknown>> = []
+    let turn = 0
+    globalThis.fetch = async (_input, init) => {
+      requests.push(JSON.parse(String(init?.body)))
+      turn += 1
+      const body = turn === 1
+        ? 'event: tool_call\ndata: {"run_id":"run-loop","sequence":1,"emitted_at":"2026-11-05T00:00:00Z","payload":{"type":"tool_call","id":"call-1","tool":"weather.get_forecast","arguments":{"city":"无锡","days":3}}}\n\nevent: turn_state\ndata: {"run_id":"run-loop","sequence":2,"emitted_at":"2026-11-05T00:00:01Z","payload":{"message":{"role":"assistant","content":null,"tool_calls":[{"id":"call-1","type":"function","function":{"name":"weather.get_forecast","arguments":"{\\"city\\":\\"无锡\\",\\"days\\":3}"}}]}}}\n\n'
+        : 'event: assistant_message\ndata: {"run_id":"run-loop","sequence":4,"emitted_at":"2026-11-05T00:00:02Z","payload":{"type":"assistant_message","text":"无锡未来三天天气已查询。"}}\n\nevent: turn_state\ndata: {"run_id":"run-loop","sequence":5,"emitted_at":"2026-11-05T00:00:03Z","payload":{"message":{"role":"assistant","content":"无锡未来三天天气已查询。"}}}\n\n'
+      return new Response(body, { headers: { 'Content-Type': 'text/event-stream' } })
+    }
+    try {
+      const execute = async (calls: Array<{ id: string; tool: string }>) => calls.map((call) => ({ type: 'tool_result' as const, id: call.id, tool: call.tool, result: { ok: true } }))
+      await expect(runWebAgentLoop({ transport: 'proxy', proxyUrl: 'https://agent.example.com', endpoint: 'https://provider.example/v1', model: 'test', apiKey: 'secret' }, '无锡天气', execute)).resolves.toEqual({ text: '无锡未来三天天气已查询。', runId: 'run-loop', turns: 2 })
+      expect(requests[1]).toMatchObject({ run_id: 'run-loop', sequence: 3 })
+      expect(requests[1].messages).toEqual(expect.arrayContaining([expect.objectContaining({ role: 'tool', tool_call_id: 'call-1' })]))
     } finally {
       globalThis.fetch = originalFetch
     }

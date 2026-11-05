@@ -61,6 +61,12 @@ export function LayerPanel() {
   const [dragOverLayerId, setDragOverLayerId] = useState<string | null>(null)
   const [isLoadingFiles, setIsLoadingFiles] = useState(false)
 
+  useEffect(() => {
+    const choose = () => fileInputRef.current?.click()
+    window.addEventListener('geovela:choose-files', choose)
+    return () => window.removeEventListener('geovela:choose-files', choose)
+  }, [])
+
   // ─── Add Data ─────────────────────────────────────────────────
 
   const handleAddFiles = useCallback(

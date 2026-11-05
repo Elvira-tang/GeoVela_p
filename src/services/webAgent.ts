@@ -20,12 +20,33 @@ export interface WeatherAgentPlan {
 }
 
 export interface WeatherAgentStreamEvent {
-  event: 'tool_call' | 'tool_result' | 'assistant_message'
+  event: 'tool_call' | 'tool_result' | 'assistant_message' | 'turn_state'
   data: Record<string, unknown>
   runId: string
   sequence: number
   emittedAt: string
   durationMs?: number
+}
+
+export interface AgentToolCall {
+  type: 'tool_call'
+  id: string
+  tool: string
+  arguments: Record<string, unknown>
+}
+
+export interface AgentToolResult {
+  type: 'tool_result'
+  id: string
+  tool: string
+  result: Record<string, unknown>
+}
+
+interface ProviderMessage {
+  role: 'user' | 'assistant' | 'tool'
+  content: string | null
+  tool_call_id?: string
+  tool_calls?: Array<{ id: string; type: 'function'; function: { name: string; arguments: string } }>
 }
 
 const SYSTEM_PROMPT = `You route Chinese user requests for a weather GIS web app.
@@ -92,7 +113,7 @@ function parseSseBlock(block: string): WeatherAgentStreamEvent | null {
   const lines = block.split(/\r?\n/)
   const event = lines.find((line) => line.startsWith('event:'))?.slice(6).trim()
   const data = lines.filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trim()).join('\n')
-  if (!event || !data || !['tool_call', 'tool_result', 'assistant_message'].includes(event)) return null
+  if (!event || !data || !['tool_call', 'tool_result', 'assistant_message', 'turn_state'].includes(event)) return null
   const envelope = JSON.parse(data) as Record<string, unknown>
   if (typeof envelope.run_id !== 'string' || !Number.isInteger(envelope.sequence) || typeof envelope.emitted_at !== 'string' || typeof envelope.payload !== 'object' || envelope.payload === null) {
     throw new Error('Agent Server 返回了无效的事件信封')
@@ -105,6 +126,64 @@ function parseSseBlock(block: string): WeatherAgentStreamEvent | null {
     emittedAt: envelope.emitted_at,
     durationMs: typeof envelope.duration_ms === 'number' ? envelope.duration_ms : undefined,
   }
+}
+
+export async function runWebAgentLoop(
+  config: WebAgentConfig,
+  message: string,
+  execute: (calls: AgentToolCall[]) => Promise<AgentToolResult[]> | AgentToolResult[],
+  signal?: AbortSignal,
+  onEvent?: (event: WeatherAgentStreamEvent) => void,
+): Promise<{ text: string; runId: string; turns: number }> {
+  if (config.transport !== 'proxy') throw new Error('完整 Agent Loop 需要安全代理模式')
+  const messages: ProviderMessage[] = [{ role: 'user', content: message }]
+  let runId: string | undefined
+  let sequence = 0
+  for (let turn = 1; turn <= 8; turn += 1) {
+    const response = await fetch(`${config.proxyUrl.trim().replace(/\/$/, '')}/v1/agent/turn`, {
+      method: 'POST', signal, headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      body: JSON.stringify({ endpoint: config.endpoint, model: config.model, api_key: config.apiKey || null, message, messages, run_id: runId, sequence }),
+    })
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({})) as { detail?: string }
+      throw new Error(`Agent Server ${response.status}${body.detail ? `: ${body.detail}` : ''}`)
+    }
+    const calls: AgentToolCall[] = []
+    let state: ProviderMessage | undefined
+    let finalText: string | undefined
+    const reader = response.body?.getReader()
+    const decoder = new TextDecoder()
+    let buffer = reader ? '' : await response.text()
+    const consume = (block: string) => {
+      const event = parseSseBlock(block)
+      if (!event) return
+      runId = event.runId; sequence = event.sequence; onEvent?.(event)
+      if (event.event === 'tool_call') calls.push(event.data as unknown as AgentToolCall)
+      if (event.event === 'assistant_message') finalText = String(event.data.text ?? '')
+      if (event.event === 'turn_state') state = event.data.message as ProviderMessage
+    }
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read()
+        buffer += decoder.decode(value, { stream: !done })
+        const blocks = buffer.split(/\r?\n\r?\n/); buffer = blocks.pop() ?? ''; blocks.forEach(consume)
+        if (done) break
+      }
+    }
+    if (buffer.trim()) consume(buffer)
+    if (!runId || !state) throw new Error('Agent Server 未返回有效 turn_state')
+    messages.push(state)
+    if (finalText !== undefined && calls.length === 0) return { text: finalText, runId, turns: turn }
+    if (calls.length === 0) throw new Error('Agent 未返回工具调用或最终回答')
+    const results = await execute(calls)
+    if (results.length !== calls.length) throw new Error('工具结果数量与调用数量不一致')
+    for (const result of results) {
+      const event: WeatherAgentStreamEvent = { event: 'tool_result', data: result as unknown as Record<string, unknown>, runId, sequence: ++sequence, emittedAt: new Date().toISOString() }
+      onEvent?.(event)
+      messages.push({ role: 'tool', tool_call_id: result.id, content: JSON.stringify(result.result) })
+    }
+  }
+  throw new Error('Agent 超过最大工具轮次（8）')
 }
 
 async function readSsePlan(response: Response, onEvent?: (event: WeatherAgentStreamEvent) => void): Promise<WeatherAgentPlan> {

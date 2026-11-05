@@ -172,3 +172,30 @@ describe('POST /v1/run', () => {
 		expect(body).toContain('event: assistant_message');
 	});
 });
+
+describe('POST /v1/agent/turn', () => {
+	it('returns model tool calls and resumable turn state', async () => {
+		vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: null, tool_calls: [{ id: 'call-1', type: 'function', function: { name: 'weather.get_forecast', arguments: '{"city":"无锡","days":3}' } }] } }] })));
+		const response = await worker.fetch(new Request('https://worker.dev/v1/agent/turn', { method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '203.0.113.55', ...ORIGIN }, body: JSON.stringify({ endpoint: 'https://provider.example/v1', model: 'test', message: '无锡天气' }) }), env);
+		const body = await response.text();
+		expect(response.status).toBe(200);
+		expect(body).toContain('event: tool_call');
+		expect(body).toContain('"id":"call-1"');
+		expect(body).toContain('"tool":"weather.get_forecast"');
+		expect(body).toContain('event: turn_state');
+	});
+
+	it('accepts tool results and returns the final answer', async () => {
+		vi.stubGlobal('fetch', async (_input: RequestInfo | URL, init?: RequestInit) => {
+			const request = JSON.parse(String(init?.body));
+			expect(request.messages.at(-1)).toMatchObject({ role: 'tool', tool_call_id: 'call-1' });
+			return new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: '已完成。' } }] }));
+		});
+		const messages = [{ role: 'user', content: '无锡天气' }, { role: 'assistant', content: null, tool_calls: [{ id: 'call-1', type: 'function', function: { name: 'weather.get_forecast', arguments: '{"city":"无锡","days":3}' } }] }, { role: 'tool', tool_call_id: 'call-1', content: '{"ok":true}' }];
+		const response = await worker.fetch(new Request('https://worker.dev/v1/agent/turn', { method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '203.0.113.56', ...ORIGIN }, body: JSON.stringify({ endpoint: 'https://provider.example/v1', model: 'test', message: '无锡天气', run_id: 'run-1', sequence: 4, messages }) }), env);
+		const body = await response.text();
+		expect(body).toContain('event: assistant_message');
+		expect(body).toContain('已完成。');
+		expect(body).toContain('"run_id":"run-1"');
+	});
+});

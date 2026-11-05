@@ -51,6 +51,36 @@ interface ToolCallEvent {
 	arguments: Record<string, unknown>;
 }
 
+interface AgentMessage {
+	role: 'user' | 'assistant' | 'tool';
+	content: string | null;
+	tool_call_id?: string;
+	tool_calls?: Array<{ id: string; type: 'function'; function: { name: string; arguments: string } }>;
+}
+
+interface AgentTurnRequest extends IntentRequest {
+	messages?: AgentMessage[];
+	run_id?: string;
+	sequence?: number;
+}
+
+const AGENT_SYSTEM_PROMPT = `You are GeoVela, a data-driven Web GIS agent. The user message contains the active dataset context.
+Use dataset.describe and dataset.query to inspect the active imported dataset, then use map, chart, and table tools for results.
+Weather and POI are optional example importers, never assume they are loaded. Never claim a map, layer, chart, or table changed unless its tool result says it succeeded.
+Continue using tools until the task is complete, then answer concisely in Chinese using only facts supported by the dataset and tool results.`;
+
+const AGENT_TOOLS = [
+	{ type: 'function', function: { name: 'dataset.describe', description: 'Describe the active dataset schema, extent, geometry and size.', parameters: { type: 'object', properties: {}, additionalProperties: false } } },
+	{ type: 'function', function: { name: 'dataset.query', description: 'Read a bounded sample of rows from the active dataset for analysis.', parameters: { type: 'object', properties: { limit: { type: 'integer', minimum: 1, maximum: 200 } }, additionalProperties: false } } },
+	{ type: 'function', function: { name: 'weather.get_recent', description: 'Get recent observed weather for available Chinese cities.', parameters: { type: 'object', properties: { city: { type: 'string' }, days: { type: 'integer', minimum: 1, maximum: 5 } }, required: ['days'], additionalProperties: false } } },
+	{ type: 'function', function: { name: 'weather.get_forecast', description: 'Get forecast weather for available Chinese cities.', parameters: { type: 'object', properties: { city: { type: 'string' }, days: { type: 'integer', minimum: 1, maximum: 5 } }, required: ['days'], additionalProperties: false } } },
+	{ type: 'function', function: { name: 'map.fly_to', description: 'Move the map to a city or coordinate.', parameters: { type: 'object', properties: { city: { type: 'string' }, center: { type: 'array', items: { type: 'number' }, minItems: 2, maxItems: 2 }, zoom: { type: 'number', minimum: 0, maximum: 22 } }, required: ['zoom'], additionalProperties: false } } },
+	{ type: 'function', function: { name: 'map.add_geojson_layer', description: 'Render a GeoJSON FeatureCollection on the map.', parameters: { type: 'object', properties: { id: { type: 'string' }, geojson: { type: 'object' }, value_property: { type: 'string' } }, required: ['id', 'geojson'], additionalProperties: false } } },
+	{ type: 'function', function: { name: 'chart.render', description: 'Render a chart from tabular series.', parameters: { type: 'object', properties: { title: { type: 'string' }, chart: { type: 'string', enum: ['line', 'bar'] }, rows: { type: 'array', items: { type: 'object' } }, x: { type: 'string' }, y: { type: 'array', items: { type: 'string' } } }, required: ['title', 'chart', 'rows', 'x', 'y'], additionalProperties: false } } },
+	{ type: 'function', function: { name: 'table.show', description: 'Show rows in a data table.', parameters: { type: 'object', properties: { title: { type: 'string' }, rows: { type: 'array', items: { type: 'object' } } }, required: ['title', 'rows'], additionalProperties: false } } },
+	{ type: 'function', function: { name: 'poi.search_milk_tea', description: 'Search milk-tea shops in the current map bounds and render them as a POI layer.', parameters: { type: 'object', properties: {}, additionalProperties: false } } },
+] as const;
+
 class HttpError extends Error {
 	constructor(
 		public status: number,
@@ -234,6 +264,26 @@ function parseIntentRequest(body: unknown): IntentRequest {
 	};
 }
 
+function parseAgentTurnRequest(body: unknown): AgentTurnRequest {
+	const base = parseIntentRequest(body);
+	const value = body as Record<string, unknown>;
+	const runId = value.run_id;
+	const sequence = value.sequence;
+	if (runId !== undefined && (typeof runId !== 'string' || runId.length > 100)) throw new HttpError(422, 'Invalid run_id');
+	if (sequence !== undefined && (!Number.isInteger(sequence) || (sequence as number) < 0 || (sequence as number) > 100)) throw new HttpError(422, 'Invalid sequence');
+	if (value.messages !== undefined && !Array.isArray(value.messages)) throw new HttpError(422, 'Invalid messages');
+	const messages = (value.messages ?? []) as unknown[];
+	if (messages.length > 40) throw new HttpError(422, 'Too many messages');
+	for (const item of messages) {
+		if (typeof item !== 'object' || item === null) throw new HttpError(422, 'Invalid message');
+		const message = item as Record<string, unknown>;
+		if (!['user', 'assistant', 'tool'].includes(String(message.role))) throw new HttpError(422, 'Invalid message role');
+		if (message.content !== null && typeof message.content !== 'string') throw new HttpError(422, 'Invalid message content');
+		if (typeof message.content === 'string' && message.content.length > 40_000) throw new HttpError(422, 'Message too large');
+	}
+	return { ...base, messages: messages as AgentMessage[], run_id: runId as string | undefined, sequence: sequence as number | undefined };
+}
+
 const VALID_SCOPES = new Set(['nationwide', 'city']);
 const VALID_ACTIONS = new Set(['weather', 'locate', 'predict', 'chart']);
 const VALID_METRICS = new Set(['temperature', 'rain', 'wind']);
@@ -298,6 +348,64 @@ async function routeIntent(payload: IntentRequest): Promise<WeatherIntent> {
 	}
 }
 
+async function runAgentTurn(payload: AgentTurnRequest, cors: Record<string, string>): Promise<Response> {
+	rejectPrivateDestination(payload.endpoint);
+	const runId = payload.run_id ?? crypto.randomUUID();
+	let sequence = payload.sequence ?? 0;
+	const history: AgentMessage[] = payload.messages?.length ? payload.messages : [{ role: 'user', content: payload.message }];
+	const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+	if (payload.api_key) headers.Authorization = `Bearer ${payload.api_key}`;
+	let response: Response;
+	const startedAt = Date.now();
+	try {
+		response = await fetch(completionUrl(payload.endpoint), {
+			method: 'POST', headers, redirect: 'manual', signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+			body: JSON.stringify({ model: payload.model, temperature: 0, messages: [{ role: 'system', content: AGENT_SYSTEM_PROMPT }, ...history], tools: AGENT_TOOLS, tool_choice: 'auto' }),
+		});
+	} catch {
+		throw new HttpError(502, 'Provider response could not be processed');
+	}
+	if (response.status >= 400) throw new HttpError(502, `Provider returned HTTP ${response.status}`);
+	let message: AgentMessage;
+	try {
+		const data = await response.json() as { choices?: Array<{ message?: AgentMessage }> };
+		if (!data.choices?.[0]?.message) throw new Error('Missing message');
+		message = data.choices[0].message;
+	} catch {
+		throw new HttpError(502, 'Provider response could not be processed');
+	}
+	const chunks: string[] = [];
+	for (const call of message.tool_calls ?? []) {
+		let args: unknown;
+		try { args = JSON.parse(call.function.arguments); } catch { throw new HttpError(502, 'Provider returned invalid tool arguments'); }
+		chunks.push(sseEvent('tool_call', { type: 'tool_call', id: call.id, tool: call.function.name, arguments: args }, runId, ++sequence, Date.now() - startedAt));
+	}
+	if (!(message.tool_calls?.length)) {
+		chunks.push(sseEvent('assistant_message', { type: 'assistant_message', status: 'success', text: message.content ?? '' }, runId, ++sequence, Date.now() - startedAt));
+	}
+	chunks.push(sseEvent('turn_state', { message }, runId, ++sequence));
+	return new Response(chunks.join(''), { status: 200, headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no', ...cors } });
+}
+
+async function searchMilkTeaPois(url: URL, cors: Record<string, string>): Promise<Response> {
+	const parts = (url.searchParams.get('bbox') ?? '').split(',').map(Number);
+	if (parts.length !== 4 || parts.some((value) => !Number.isFinite(value))) throw new HttpError(422, 'Invalid bbox');
+	const [south, west, north, east] = parts;
+	if (south < -90 || north > 90 || west < -180 || east > 180 || south >= north || west >= east || (north - south) * (east - west) > 30) throw new HttpError(422, 'bbox is too large');
+	const query = `[out:json][timeout:20];(nwr["shop"="tea"](${south},${west},${north},${east});nwr["cuisine"~"bubble_tea|tea"](${south},${west},${north},${east});nwr["name"~"奶茶|茶百道|蜜雪冰城|喜茶|奈雪|CoCo|一点点",i](${south},${west},${north},${east}););out center tags 300;`;
+	let upstream: Response;
+	try { upstream = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ data: query }), signal: AbortSignal.timeout(25_000) }); }
+	catch { throw new HttpError(502, 'POI provider could not be reached'); }
+	if (!upstream.ok) throw new HttpError(502, `POI provider returned HTTP ${upstream.status}`);
+	const data = await upstream.json() as { elements?: Array<{ id: number; lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }> };
+	const features = (data.elements ?? []).flatMap((item) => {
+		const latitude = item.lat ?? item.center?.lat; const longitude = item.lon ?? item.center?.lon;
+		if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return [];
+		return [{ type: 'Feature', id: item.id, geometry: { type: 'Point', coordinates: [longitude, latitude] }, properties: { name: item.tags?.name ?? '奶茶店', brand: item.tags?.brand ?? '', address: item.tags?.['addr:full'] ?? '', osm_id: item.id } }];
+	});
+	return jsonResponse({ type: 'FeatureCollection', features }, 200, cors);
+}
+
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const cors = corsHeaders(request, env);
@@ -310,6 +418,11 @@ export default {
 		try {
 			if (request.method === 'GET' && url.pathname === '/health') {
 				return jsonResponse({ status: 'ok' }, 200, cors);
+			}
+			if (request.method === 'GET' && url.pathname === '/v1/poi/milk-tea') {
+				const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+				await enforceRateLimit(ip, env);
+				return searchMilkTeaPois(url, cors);
 			}
 			if (request.method === 'POST' && (url.pathname === '/v1/intent' || url.pathname === '/v1/run')) {
 				const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
@@ -324,6 +437,13 @@ export default {
 				const startedAt = Date.now();
 				const intent = await routeIntent(payload);
 				return url.pathname === '/v1/run' ? runResponse(intent, cors, Date.now() - startedAt) : jsonResponse(intent, 200, cors);
+			}
+			if (request.method === 'POST' && url.pathname === '/v1/agent/turn') {
+				const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+				await enforceRateLimit(ip, env);
+				let body: unknown;
+				try { body = await request.json(); } catch { throw new HttpError(422, 'Request body must be valid JSON'); }
+				return runAgentTurn(parseAgentTurnRequest(body), cors);
 			}
 			return errorResponse(new HttpError(404, 'Not found'), cors);
 		} catch (error) {
