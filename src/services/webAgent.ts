@@ -141,8 +141,8 @@ export async function runWebAgentLoop(
   let runId: string | undefined
   let sequence = 0
   for (let turn = 1; turn <= 8; turn += 1) {
-    const response = await fetch(`${config.proxyUrl.trim().replace(/\/$/, '')}/v1/agent/turn`, {
-      method: 'POST', signal, headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+    const response = await fetch(`${config.proxyUrl.trim().replace(/\/$/, '')}/v1/agent/turn?format=json`, {
+      method: 'POST', signal, headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ endpoint: config.endpoint, model: config.model, api_key: config.apiKey || null, message: message.slice(0, 40_000), messages, run_id: runId, sequence }),
     })
     if (!response.ok) {
@@ -152,11 +152,7 @@ export async function runWebAgentLoop(
     const calls: AgentToolCall[] = []
     let state: ProviderMessage | undefined
     let finalText: string | undefined
-    // The Worker assembles the complete SSE payload before returning it. Reading
-    // it as a live stream makes some Chromium/network combinations surface a
-    // clean connection close as `TypeError: Failed to fetch`, even though the
-    // provider request succeeded. Consume the finite payload atomically instead.
-    let buffer = await response.text()
+    const batch = await response.json() as { events?: Array<{ event?: string; data?: Record<string, unknown> }> }
     const consume = (block: string) => {
       const event = parseSseBlock(block)
       if (!event) return
@@ -165,10 +161,9 @@ export async function runWebAgentLoop(
       if (event.event === 'assistant_message') finalText = String(event.data.text ?? '')
       if (event.event === 'turn_state') state = event.data.message as ProviderMessage
     }
-    const blocks = buffer.split(/\r?\n\r?\n/)
-    buffer = blocks.pop() ?? ''
-    blocks.forEach(consume)
-    if (buffer.trim()) consume(buffer)
+    for (const item of batch.events ?? []) {
+      consume(`event: ${String(item.event ?? '')}\ndata: ${JSON.stringify(item.data ?? {})}`)
+    }
     if (!runId || !state) throw new Error('Agent Server 未返回有效 turn_state')
     messages.push(state)
     if (finalText !== undefined && calls.length === 0) return { text: finalText, runId, turns: turn }

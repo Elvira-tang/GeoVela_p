@@ -66,10 +66,16 @@ describe('web weather agent provider', () => {
     globalThis.fetch = async (_input, init) => {
       requests.push(JSON.parse(String(init?.body)))
       turn += 1
-      const body = turn === 1
-        ? 'event: tool_call\ndata: {"run_id":"run-loop","sequence":1,"emitted_at":"2026-11-05T00:00:00Z","payload":{"type":"tool_call","id":"call-1","tool":"weather.get_forecast","arguments":{"city":"无锡","days":3}}}\n\nevent: turn_state\ndata: {"run_id":"run-loop","sequence":2,"emitted_at":"2026-11-05T00:00:01Z","payload":{"message":{"role":"assistant","content":null,"tool_calls":[{"id":"call-1","type":"function","function":{"name":"weather.get_forecast","arguments":"{\\"city\\":\\"无锡\\",\\"days\\":3}"}}]}}}\n\n'
-        : 'event: assistant_message\ndata: {"run_id":"run-loop","sequence":4,"emitted_at":"2026-11-05T00:00:02Z","payload":{"type":"assistant_message","text":"无锡未来三天天气已查询。"}}\n\nevent: turn_state\ndata: {"run_id":"run-loop","sequence":5,"emitted_at":"2026-11-05T00:00:03Z","payload":{"message":{"role":"assistant","content":"无锡未来三天天气已查询。"}}}\n\n'
-      return new Response(body, { headers: { 'Content-Type': 'text/event-stream' } })
+      const data = turn === 1
+        ? { events: [
+            { event: 'tool_call', data: { run_id: 'run-loop', sequence: 1, emitted_at: '2026-11-05T00:00:00Z', payload: { type: 'tool_call', id: 'call-1', tool: 'weather.get_forecast', arguments: { city: '无锡', days: 3 } } } },
+            { event: 'turn_state', data: { run_id: 'run-loop', sequence: 2, emitted_at: '2026-11-05T00:00:01Z', payload: { message: { role: 'assistant', content: null, tool_calls: [{ id: 'call-1', type: 'function', function: { name: 'weather.get_forecast', arguments: '{"city":"无锡","days":3}' } }] } } } },
+          ] }
+        : { events: [
+            { event: 'assistant_message', data: { run_id: 'run-loop', sequence: 4, emitted_at: '2026-11-05T00:00:02Z', payload: { type: 'assistant_message', text: '无锡未来三天天气已查询。' } } },
+            { event: 'turn_state', data: { run_id: 'run-loop', sequence: 5, emitted_at: '2026-11-05T00:00:03Z', payload: { message: { role: 'assistant', content: '无锡未来三天天气已查询。' } } } },
+          ] }
+      return Response.json(data)
     }
     try {
       const execute = async (calls: Array<{ id: string; tool: string }>) => calls.map((call) => ({ type: 'tool_result' as const, id: call.id, tool: call.tool, result: { ok: true } }))

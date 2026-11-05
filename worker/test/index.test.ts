@@ -193,6 +193,15 @@ describe('POST /v1/agent/turn', () => {
 		expect(body).toContain('event: turn_state');
 	});
 
+	it('returns an ordinary JSON batch for browser agent calls', async () => {
+		vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: '连接成功。' } }] })));
+		const response = await worker.fetch(new Request('https://worker.dev/v1/agent/turn?format=json', { method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '203.0.113.57', ...ORIGIN }, body: JSON.stringify({ endpoint: 'https://provider.example/v1', model: 'test', message: '测试' }) }), env);
+		expect(response.headers.get('content-type')).toContain('application/json');
+		const body = await response.json() as { events: Array<{ event: string; data: { payload: { text?: string } } }> };
+		expect(body.events.map((item) => item.event)).toEqual(['assistant_message', 'turn_state']);
+		expect(body.events[0].data.payload.text).toBe('连接成功。');
+	});
+
 	it('accepts tool results and returns the final answer', async () => {
 		vi.stubGlobal('fetch', async (_input: RequestInfo | URL, init?: RequestInit) => {
 			const request = JSON.parse(String(init?.body));

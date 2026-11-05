@@ -118,15 +118,22 @@ function errorResponse(error: HttpError, cors: Record<string, string>): Response
 	return jsonResponse({ detail: error.message }, error.status, cors);
 }
 
-function sseEvent(event: string, payload: unknown, runId: string, sequence: number, durationMs?: number): string {
-	const data = {
+function eventEnvelope(event: string, payload: unknown, runId: string, sequence: number, durationMs?: number) {
+	return {
+		event,
+		data: {
 		run_id: runId,
 		sequence,
 		emitted_at: new Date().toISOString(),
 		...(durationMs === undefined ? {} : { duration_ms: durationMs }),
 		payload,
+		},
 	};
-	return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+}
+
+function sseEvent(event: string, payload: unknown, runId: string, sequence: number, durationMs?: number): string {
+	const envelope = eventEnvelope(event, payload, runId, sequence, durationMs);
+	return `event: ${event}\ndata: ${JSON.stringify(envelope.data)}\n\n`;
 }
 
 function toolEventsForIntent(intent: WeatherIntent): ToolCallEvent[] {
@@ -345,7 +352,7 @@ async function routeIntent(payload: IntentRequest): Promise<WeatherIntent> {
 	}
 }
 
-async function runAgentTurn(payload: AgentTurnRequest, cors: Record<string, string>): Promise<Response> {
+async function runAgentTurn(payload: AgentTurnRequest, cors: Record<string, string>, jsonFormat = false): Promise<Response> {
 	rejectPrivateDestination(payload.endpoint);
 	const runId = payload.run_id ?? crypto.randomUUID();
 	let sequence = payload.sequence ?? 0;
@@ -371,16 +378,18 @@ async function runAgentTurn(payload: AgentTurnRequest, cors: Record<string, stri
 	} catch {
 		throw new HttpError(502, 'Provider response could not be processed');
 	}
-	const chunks: string[] = [];
+	const events: ReturnType<typeof eventEnvelope>[] = [];
 	for (const call of message.tool_calls ?? []) {
 		let args: unknown;
 		try { args = JSON.parse(call.function.arguments); } catch { throw new HttpError(502, 'Provider returned invalid tool arguments'); }
-		chunks.push(sseEvent('tool_call', { type: 'tool_call', id: call.id, tool: call.function.name, arguments: args }, runId, ++sequence, Date.now() - startedAt));
+		events.push(eventEnvelope('tool_call', { type: 'tool_call', id: call.id, tool: call.function.name, arguments: args }, runId, ++sequence, Date.now() - startedAt));
 	}
 	if (!(message.tool_calls?.length)) {
-		chunks.push(sseEvent('assistant_message', { type: 'assistant_message', status: 'success', text: message.content ?? '' }, runId, ++sequence, Date.now() - startedAt));
+		events.push(eventEnvelope('assistant_message', { type: 'assistant_message', status: 'success', text: message.content ?? '' }, runId, ++sequence, Date.now() - startedAt));
 	}
-	chunks.push(sseEvent('turn_state', { message }, runId, ++sequence));
+	events.push(eventEnvelope('turn_state', { message }, runId, ++sequence));
+	if (jsonFormat) return jsonResponse({ events }, 200, cors);
+	const chunks = events.map(({ event, data }) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 	return new Response(chunks.join(''), { status: 200, headers: { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no', ...cors } });
 }
 
@@ -440,7 +449,7 @@ export default {
 				await enforceRateLimit(ip, env);
 				let body: unknown;
 				try { body = await request.json(); } catch { throw new HttpError(422, 'Request body must be valid JSON'); }
-				return runAgentTurn(parseAgentTurnRequest(body), cors);
+				return runAgentTurn(parseAgentTurnRequest(body), cors, url.searchParams.get('format') === 'json');
 			}
 			return errorResponse(new HttpError(404, 'Not found'), cors);
 		} catch (error) {
