@@ -425,6 +425,13 @@ export interface BasemapSource {
 
 export const BUILTIN_BASEMAPS: BasemapSource[] = [
   {
+    id: 'gaode-zh',
+    name: '高德中文地图',
+    type: 'raster-tiles',
+    url: 'https://webrd01.is.autonavi.com/appmaptile?style=7&x={x}&y={y}&z={z}',
+    attribution: '© 高德地图',
+  },
+  {
     id: 'carto-dark-raster',
     name: 'CARTO Dark Raster',
     type: 'raster-tiles',

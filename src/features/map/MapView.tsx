@@ -10,6 +10,7 @@ import { loadGeoFiles } from '@/services/geo'
 import { useIdentify, useBoxSelect, FeatureAttributePanel, BoxSelectResultPanel } from './identify'
 import { ExportButton } from './export'
 import { PinnedImagePanel } from './PinnedImagePanel'
+import { useWebAgentConfigStore } from '@/stores/webAgentConfigStore'
 
 /**
  * MapView — the primary map visualization panel.
@@ -76,6 +77,7 @@ export function MapView({
 
   // 新增：从 settingsStore 读取 showMapLabels 设置
   const showMapLabels = useSettingsStore((s) => s.appearance.showMapLabels)
+  const mapLanguage = useWebAgentConfigStore((s) => s.config.language ?? 'zh')
 
   // 新增：应用 showMapLabels 设置（处理 raster 和 vector 底图）
   // 读取当前 basemap 从 store 而非闭包，避免在 style reload 期间拿到过期引用。
@@ -147,6 +149,7 @@ export function MapView({
       // 这确保地图初始化时就能正确应用用户的 label 显示偏好
       const { appearance } = useSettingsStore.getState()
       applyShowMapLabels(appearance.showMapLabels)
+      mapEngine.setLabelLanguage(mapLanguage)
 
       // 注意：identify / box-select controller 的挂载不再依赖此回调，
       // MapEngine 自身在 init() 里订阅 map.once('load') 翻 ready 标志，
@@ -178,6 +181,15 @@ export function MapView({
       prevLayerDataRef.current.clear()
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const map = mapEngine.getMap()
+    if (!map) return
+    const apply = () => mapEngine.setLabelLanguage(mapLanguage)
+    if (map.isStyleLoaded()) apply()
+    map.on('style.load', apply)
+    return () => { map.off('style.load', apply) }
+  }, [mapLanguage, basemap.id])
 
   // Attach identify controller (订阅 mapEngine.onReady 自行处理 ready 时机)
   useIdentify()

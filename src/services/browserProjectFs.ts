@@ -61,12 +61,13 @@ export const browserProjectFs = {
 }
 
 export function workspaceUri(path: string) {
-  return `workspace://${path.split('/').map(encodeURIComponent).join('/')}`
+  return `workspace://${path}`
 }
 
 export function pathFromWorkspaceUri(uri: string) {
   if (!uri.startsWith('workspace://')) return uri
-  return uri.slice('workspace://'.length).split('/').map(decodeURIComponent).join('/')
+  const value = uri.slice('workspace://'.length)
+  try { return decodeURIComponent(value) } catch { return value }
 }
 
 export async function importBrowserDirectory(files: File[]) {

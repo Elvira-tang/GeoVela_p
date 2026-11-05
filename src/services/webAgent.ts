@@ -1,5 +1,6 @@
 export interface WebAgentConfig {
   transport: 'direct' | 'proxy'
+  language?: 'zh' | 'en'
   proxyUrl: string
   endpoint: string
   model: string
@@ -142,7 +143,7 @@ export async function runWebAgentLoop(
   for (let turn = 1; turn <= 8; turn += 1) {
     const response = await fetch(`${config.proxyUrl.trim().replace(/\/$/, '')}/v1/agent/turn`, {
       method: 'POST', signal, headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify({ endpoint: config.endpoint, model: config.model, api_key: config.apiKey || null, message, messages, run_id: runId, sequence }),
+      body: JSON.stringify({ endpoint: config.endpoint, model: config.model, api_key: config.apiKey || null, message: message.slice(0, 40_000), messages, run_id: runId, sequence }),
     })
     if (!response.ok) {
       const body = await response.json().catch(() => ({})) as { detail?: string }

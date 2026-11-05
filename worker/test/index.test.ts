@@ -174,6 +174,14 @@ describe('POST /v1/run', () => {
 });
 
 describe('POST /v1/agent/turn', () => {
+	it('accepts a full dataset context larger than the old 1000 character limit', async () => {
+		vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: '数据上下文已读取。' } }] })));
+		const message = `数据上下文：${'字段和值'.repeat(600)}`;
+		const response = await worker.fetch(new Request('https://worker.dev/v1/agent/turn', { method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '203.0.113.54', ...ORIGIN }, body: JSON.stringify({ endpoint: 'https://provider.example/v1', model: 'test', message }) }), env);
+		expect(response.status).toBe(200);
+		expect(await response.text()).toContain('数据上下文已读取');
+	});
+
 	it('returns model tool calls and resumable turn state', async () => {
 		vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: null, tool_calls: [{ id: 'call-1', type: 'function', function: { name: 'weather.get_forecast', arguments: '{"city":"无锡","days":3}' } }] } }] })));
 		const response = await worker.fetch(new Request('https://worker.dev/v1/agent/turn', { method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '203.0.113.55', ...ORIGIN }, body: JSON.stringify({ endpoint: 'https://provider.example/v1', model: 'test', message: '无锡天气' }) }), env);

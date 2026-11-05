@@ -64,7 +64,7 @@ interface AgentTurnRequest extends IntentRequest {
 	sequence?: number;
 }
 
-const AGENT_SYSTEM_PROMPT = `You are GeoVela, a general data-driven Web GIS agent. The user message contains a real workspace:// file URI and a schema/sample already resolved by the browser.
+const AGENT_SYSTEM_PROMPT = `You are GeoVela, a general data-driven Web GIS agent. The user message contains a local file name and a schema/sample already resolved by the browser.
 Inspect the dataset with dataset.describe/query. Select tools from the user's request: add the dataset to the map, apply categorized or graduated POI styling, build a six-panel analytical dashboard, show a table, and/or generate a substantial report containing data quality, descriptive statistics, charts and evidence-based interpretation.
 Never invent rows, statistics, map state or completed artifacts. The browser computes visualizations from the full local dataset; do not send fabricated chart rows or GeoJSON. Call tools until the requested deliverables actually succeed, then answer concisely in Chinese and cite returned workspace URIs.`;
 
@@ -247,7 +247,7 @@ function parseIntentRequest(body: unknown): IntentRequest {
 	if (typeof model !== 'string' || model.length < 1 || model.length > 200) {
 		throw new HttpError(422, 'Invalid model');
 	}
-	if (typeof message !== 'string' || message.length < 1 || message.length > 1000) {
+	if (typeof message !== 'string' || message.length < 1 || message.length > 40_000) {
 		throw new HttpError(422, 'Invalid message');
 	}
 	if (api_key !== undefined && api_key !== null && typeof api_key !== 'string') {

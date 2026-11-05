@@ -7,12 +7,21 @@ import { GeoAgentWorkspace } from '@/features/web-agent/GeoAgentWorkspace'
 import { WebControlCenter } from '@/features/web-control/WebControlCenter'
 import { ApiSettingsPage, McpPage, PluginsPage, SkillsPage } from '@/features/web-control/ManagementPages'
 import { ApprovalGate } from '@/features/approval/ApprovalGate'
+import { useWebAgentConfigStore } from '@/stores/webAgentConfigStore'
+import { useMapStore } from '@/stores/mapStore'
+import { BUILTIN_BASEMAPS } from '@/services/geo'
 
 type WebView = 'agent' | 'map' | 'table' | 'plugins' | 'mcp' | 'api' | 'workflows' | 'skills' | 'runs'
 const PRIMARY = [{ id: 'agent' as const, label: 'Geo Agent', icon: Bot }, { id: 'map' as const, label: '地图与图层', icon: MapIcon }, { id: 'table' as const, label: '数据表', icon: Table }]
 
 export default function WebApp() {
   const [activeView, setActiveView] = useState<WebView>('agent')
+  const language = useWebAgentConfigStore((state) => state.config.language)
+  useEffect(() => {
+    const id = 'carto-dark'
+    const basemap = BUILTIN_BASEMAPS.find((item) => item.id === id)
+    if (basemap) useMapStore.getState().setBasemap(basemap)
+  }, [language])
   useEffect(() => { const open = () => setActiveView('agent'); window.addEventListener('geovela:run-workflow', open); return () => window.removeEventListener('geovela:run-workflow', open) }, [])
   useEffect(() => { const navigate = (event: Event) => setActiveView((event as CustomEvent<WebView>).detail); window.addEventListener('geovela:navigate', navigate); return () => window.removeEventListener('geovela:navigate', navigate) }, [])
   const openPicker = (eventName: string) => { setActiveView('agent'); window.setTimeout(() => window.dispatchEvent(new CustomEvent(eventName)), 50) }

@@ -330,6 +330,38 @@ export class MapEngine {
     }
   }
 
+  setLabelLanguage(language: 'zh' | 'en'): void {
+    const chineseNameFallback: unknown[] = [
+      'match', ['upcase', ['to-string', ['get', 'name']]],
+      'CHINA', '中国', 'MONGOLIA', '蒙古国', 'NORTH KOREA', '朝鲜', 'SOUTH KOREA', '韩国',
+      'BEIJING', '北京市', 'SHANGHAI', '上海市', 'NANJING', '南京市', 'SUZHOU', '苏州市',
+      'WUXI', '无锡市', 'CHANGZHOU', '常州市', 'HANGZHOU', '杭州市', 'CHENGDU', '成都市',
+      'HUISHAN', '惠山区', 'XISHAN', '锡山区', 'BINHU', '滨湖区', 'LIANGXI', '梁溪区',
+      'XINWU', '新吴区', "CHANG'AN", '长安街道', 'QIANQIAO', '钱桥街道', 'LUOSHE', '洛社镇',
+      'ZHANGJIAO', '张泾', 'DONGTING', '东亭街道', 'XUNTANG', '巡塘', '',
+    ]
+    if (!this.map || !this.map.isStyleLoaded() || this.currentBasemap?.type === 'raster-tiles') return
+    const layers = this.map.getStyle()?.layers ?? []
+    for (const layer of layers) {
+      if (layer.type !== 'symbol' || this.managedLayerIds.has(layer.id)) continue
+      const textField = this.map.getLayoutProperty(layer.id, 'text-field')
+      if (textField === undefined) continue
+      try {
+        this.map.setLayoutProperty(layer.id, 'text-field', language === 'zh'
+          ? [
+              'case',
+              ['all', ['has', 'name_zh-Hans'], ['!=', ['get', 'name_zh-Hans'], '']], ['get', 'name_zh-Hans'],
+              ['all', ['has', 'name_zh'], ['!=', ['get', 'name_zh'], '']], ['get', 'name_zh'],
+              ['all', ['has', 'name:zh'], ['!=', ['get', 'name:zh'], '']], ['get', 'name:zh'],
+              chineseNameFallback,
+            ]
+          : ['coalesce', ['get', 'name_en'], ['get', 'name:en'], ['get', 'name']])
+      } catch {
+        // Some symbol layers use source-specific formatted expressions.
+      }
+    }
+  }
+
   /**
    * 获取当前标注可见性状态
    */
